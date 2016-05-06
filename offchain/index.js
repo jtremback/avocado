@@ -1,3 +1,15 @@
+// cli options
+// -c caller port
+// -p peer port
+// -s contract address
+// -f storage location
+let argv = require('minimist')(process.argv.slice(2))
+
+const peerPort = argv.c || 4020
+const callerPort = argv.p || 3020
+const contractAddress = argv.s || '0x3939'
+const storageLocation = argv.f || '../data/storage'
+
 require('babel-register')
 require('babel-polyfill')
 
@@ -10,10 +22,10 @@ web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'));
 
 const StateChannels = require('../environments/test/contracts/StateChannels.sol.js')
 StateChannels.load(Pudding)
-const channels = StateChannels.at('address')
+const channels = StateChannels.at(contractAddress)
 
-const {JSONStorage} = require('node-localstorage')
-const storage = new JSONStorage('../data/storage')
+const { JSONStorage } = require('node-localstorage')
+const storage = new JSONStorage(storageLocation)
 
 const globals = {
   storage,
@@ -24,5 +36,5 @@ const globals = {
 const caller = require('./servers/caller.js').default(globals)
 const peer = require('./servers/peer.js').default(globals)
 
-caller.listen(3020, () => console.log('caller api listening on 3020'))
-peer.listen(4020, () => console.log('peer api listening on 4020'))
+peer.listen(peerPort, () => console.log('peer api listening on ' + peerPort))
+caller.listen(callerPort, () => console.log('caller api listening on ' + callerPort))
