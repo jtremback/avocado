@@ -17,7 +17,7 @@ A state channel oracle is a channel that gives a result when called:
 {
     phase: 'open' | 'challenge' | 'closed'
     closingBlock: <integer>
-    stateUpdate: {
+    lastStateUpdate: {
         state: <bytes>
         sequence: <integer>
     }
