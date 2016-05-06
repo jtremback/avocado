@@ -6,11 +6,7 @@ const web3 = new Web3()
 const Pudding = require('ether-pudding')
 Pudding.setWeb3(web3)
 
-// console.log(Web3)
 web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'));
-const ECVerify = require('../environments/test/contracts/ECVerify.sol.js')
-ECVerify.load(Pudding)
-const ec = ECVerify.at('address')
 
 const StateChannels = require('../environments/test/contracts/StateChannels.sol.js')
 StateChannels.load(Pudding)
@@ -21,7 +17,6 @@ const storage = new JSONStorage('../data/storage')
 
 const globals = {
   storage,
-  ec,
   channels,
   web3
 }

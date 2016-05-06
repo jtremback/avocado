@@ -6,12 +6,10 @@ import leftPad from 'left-pad'
 export class Logic {
   constructor({
     storage,
-    ec,
     channels,
     web3
   }) {
     this.storage = storage
-    this.ec = ec
     this.channels = channels
     this.web3 = web3
   }
@@ -71,7 +69,7 @@ export class Logic {
       proposal.challengePeriod
     )
 
-    const valid = await this.ec.ecverify.call(fingerprint, proposal.signature0, proposal.address0)
+    const valid = await this.channels.ecverify.call(fingerprint, proposal.signature0, proposal.address0)
 
     if (!valid) {
       throw new Error('signature0 invalid')
@@ -102,7 +100,7 @@ export class Logic {
       challengePeriod
     )
 
-    const valid = await this.ec.ecverify.call(fingerprint, signature0, address0)
+    const valid = await this.channels.ecverify.call(fingerprint, signature0, address0)
 
     if (!valid) {
       throw new Error('signature0 invalid')
@@ -249,7 +247,7 @@ async function verifyUpdate(channel, proposal) {
   const theirAddress = channel['address' + swap[channel.me]]
   const theirSignature = proposal['signature' + swap[channel.me]]
 
-  const valid = await this.ec.ecverify.call(
+  const valid = await this.channels.ecverify.call(
     fingerprint,
     theirSignature,
     theirAddress

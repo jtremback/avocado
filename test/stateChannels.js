@@ -1,9 +1,6 @@
 /*global StateChannels web3 Uint8Array*/
-import secp256k1 from 'secp256k1'
-import crypto from 'crypto'
 import sha3 from 'js-sha3'
 import leftPad from 'left-pad'
-import BigNumber from 'bignumber.js'
 
 const keccak = sha3.keccak_256
 
