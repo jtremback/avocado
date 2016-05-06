@@ -1,5 +1,5 @@
 {
-  "name": "ethereum-state-channels",
+  "name": "avocado",
   "version": "1.0.0",
   "main": "./offchain/index.js",
   "directories": {
