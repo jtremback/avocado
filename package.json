@@ -1,7 +1,7 @@
 {
-  "name": "ethereum-judge",
+  "name": "ethereum-state-channels",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./offchain/index.js",
   "directories": {
     "test": "test"
   },
@@ -26,7 +26,7 @@
   "scripts": {
     "test": "truffle test"
   },
-  "author": "jehan.tremback@gmail.com <you@example.com>",
+  "author": "jehan.tremback@gmail.com",
   "license": "MIT",
   "eslintConfig": {
     "parser": "babel-eslint",

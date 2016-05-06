@@ -1,1 +1,0 @@
-This app doesn't run at the moment, it is meant to document and illustrate the api I am building.
