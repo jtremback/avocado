@@ -1,3 +1,6 @@
+# Avocado
+## Ethereum State Channels
+
 The ethereum blockchain must do a few things with a state channel. 
 
 1. Opening the channel. To open the channel, some state is changed on the blockchain (in a payment channel, this consists of putting some tokens in escrow). A channel oracle is set up to determine report on the state in the channel and whether administer the channel closing rules.
