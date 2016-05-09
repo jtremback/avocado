@@ -2,6 +2,19 @@
 
 import request from 'request'
 import leftPad from 'left-pad'
+import promisify from 'es6-promisify'
+
+// request.on('error', function(err) {
+//     console.log('shibby', err)
+// })
+
+const post = promisify(function (url, body, callback) {
+  request.post({
+    url,
+    body,
+    json: true,
+  }, callback)
+})
 
 export class Logic {
   constructor({
@@ -12,18 +25,26 @@ export class Logic {
     this.storage = storage
     this.channels = channels
     this.web3 = web3
+    this.solSha3 = solSha3.bind(this)
+    this.verifyUpdate = verifyUpdate.bind(this)
+    this.sign = promisify(this.web3.eth.sign)
   }
   
   // Propose a new channel and send to counterparty
-  async proposeChannel({
-    myAddress: address0,
-    counterpartyAddress: address1,
+  async proposeChannel ({
+    myAccount,
+    myAddress,
+    counterpartyAccount,
+    counterpartyAddress,
     counterpartyUrl,
     channelId,
     state,
     challengePeriod
   }) {
-    const fingerprint = solSha3(
+    const address0 = myAddress || this.web3.eth.accounts[myAccount]
+    const address1 = counterpartyAddress || this.web3.eth.accounts[counterpartyAccount]
+    
+    const fingerprint = this.solSha3(
       'newChannel',
       channelId,
       address0,
@@ -31,7 +52,7 @@ export class Logic {
       state,
       challengePeriod
     )
-
+    
     this.storage.setItem('channels' + channelId, {
       channelId,
       address0,
@@ -42,10 +63,10 @@ export class Logic {
       myProposedUpdates: [],
       acceptedUpdates: []
     })
-    
-    const signature0 = await this.web3.promise.eth.sign(address0, fingerprint)
 
-    await post(counterpartyUrl + '/add_proposed_channel', {
+    const signature0 = await this.sign(address0, fingerprint)
+
+    const res = await post(counterpartyUrl + '/add_proposed_channel', {
       channelId,
       address0,
       address1,
@@ -53,14 +74,14 @@ export class Logic {
       challengePeriod,
       signature0
     })
+    
+    return res.body
   }
-
-
 
   // Called by the counterparty over the http api, gets added to the
   // proposed channel box
-  async addProposedChannel(proposal) {
-    const fingerprint = solSha3(
+  async addProposedChannel (proposal) {
+    const fingerprint = this.solSha3(
       'newChannel',
       proposal.channelId,
       proposal.address0,
@@ -83,7 +104,7 @@ export class Logic {
 
 
   // Sign the opening tx and post it to the blockchain to open the channel
-  async acceptChannel({
+  async acceptChannel ({
     channelId,
     address0,
     address1,
@@ -91,7 +112,7 @@ export class Logic {
     challengePeriod,
     signature0
   }) {
-    const fingerprint = solSha3(
+    const fingerprint = this.solSha3(
       'newChannel',
       channelId,
       address0,
@@ -106,7 +127,7 @@ export class Logic {
       throw new Error('signature0 invalid')
     }
 
-    const signature1 = await this.web3.promise.eth.sign(address1, fingerprint)
+    const signature1 = await this.sign(address1, fingerprint)
 
     await this.channels.newChannel(
       channelId,
@@ -122,21 +143,21 @@ export class Logic {
 
 
   // Propose an update to a channel, sign, and send to counterparty
-  async proposeUpdate({
+  async proposeUpdate ({
     channelId,
     sequenceNumber,
     state
   }) {
     let channel = this.storage.getItem('channels' + channelId)
 
-    const fingerprint = solSha3(
+    const fingerprint = this.solSha3(
       'updateState',
       channelId,
       sequenceNumber,
       state
     )
     
-    const signature = await this.web3.promise.eth.sign(
+    const signature = await this.sign(
       channel['address' + channel.me],
       fingerprint
     )
@@ -158,10 +179,10 @@ export class Logic {
 
   // Called by the counterparty over the http api, gets verified and
   // added to the proposed update box
-  async addProposedUpdate(update) {
+  async addProposedUpdate (update) {
     const channel = this.storage.getItem('channels' + update.channelId)
     
-    verifyUpdate(channel, update)
+    this.verifyUpdate(channel, update)
     
     channel.theirProposedUpdates.push(update)
     this.storage.setItem('channels' + update.channelId, channel)
@@ -170,12 +191,12 @@ export class Logic {
   
 
   // Sign the update and send it back to the counterparty
-  async acceptUpdate(update) {
+  async acceptUpdate (update) {
     const channel = this.storage.getItem('channels' + update.channelId)
     
-    const fingerprint = verifyUpdate(channel, update)
+    const fingerprint = this.verifyUpdate(channel, update)
 
-    const signature = await this.web3.promise.eth.sign(
+    const signature = await this.sign(
       channel['address' + channel.me],
       fingerprint
     )
@@ -192,10 +213,10 @@ export class Logic {
 
   // Called by the counterparty over the http api, gets verified and
   // added to the accepted update box
-  async addAcceptedUpdate(update) {
+  async addAcceptedUpdate (update) {
     const channel = this.storage.getItem('channels' + update.channelId)
     
-    verifyUpdate(channel, update)
+    this.verifyUpdate(channel, update)
     
     channel.acceptedUpdates.push(update)
     this.storage.setItem('channels' + update.channelId, channel)
@@ -204,7 +225,7 @@ export class Logic {
 
 
   // Post an update to the blockchain
-  async postUpdate(update) {
+  async postUpdate (update) {
     await this.channels.updateState(
       update.channelId,
       update.sequenceNumber,
@@ -215,16 +236,16 @@ export class Logic {
   }
 
   // Start the challenge period, putting channel closing into motion
-  async startChallengePeriod(
+  async startChallengePeriod (
     channelId
   ) {
     const channel = this.storage.getItem('channels' + channelId)
-    const fingerprint = solSha3(
+    const fingerprint = this.solSha3(
       'startChallengePeriod',
       channelId
     )
     
-    const signature = await this.web3.promise.eth.sign(
+    const signature = await this.sign(
       channel['address' + channel.me],
       fingerprint
     )
@@ -236,8 +257,8 @@ export class Logic {
   }
 }
 
-async function verifyUpdate(channel, proposal) {
-  const fingerprint = solSha3(
+async function verifyUpdate (channel, proposal) {
+  const fingerprint = this.solSha3(
     'updateState',
     proposal.channelId,
     proposal.sequenceNumber,
@@ -262,15 +283,7 @@ async function verifyUpdate(channel, proposal) {
 
 const swap = [1, 0]
 
-function post(url, body, callback) {
-  request.post({
-    url,
-    body,
-    json: true,
-  }, callback)
-}
-
-function solSha3(...args) {
+function solSha3 (...args) {
   args = args.map(arg => {
     if (typeof arg === 'string') {
       if (arg.substring(0, 2) === '0x') {
@@ -282,6 +295,10 @@ function solSha3(...args) {
 
     if (typeof arg === 'number') {
       return leftPad((arg).toString(16), 64, 0)
+    }
+    
+    else {
+      return ''
     }
   })
 

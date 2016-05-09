@@ -61,7 +61,7 @@ contract StateChannels is ECVerify {
             channelId,
             address0,
             address1,
-            state
+            state,
             challengePeriod
         );
         

@@ -3,38 +3,42 @@
 // -p peer port
 // -s contract address
 // -f storage location
-let argv = require('minimist')(process.argv.slice(2))
+// -w web3 provider
+var argv = require('minimist')(process.argv.slice(2))
+var path = require('path')
 
-const peerPort = argv.c || 4020
-const callerPort = argv.p || 3020
-const contractAddress = argv.s || '0x3939'
-const storageLocation = argv.f || '../data/storage'
+var peerPort = argv.c || 4020
+var callerPort = argv.p || 3020
+var contractAddress = argv.s || '0xf8c138b08cb32391C7Ab8Edbda61E023943f72d7'
+var storageLocation = argv.f || path.join(__dirname, '../data/storage')
+var web3Provider = argv.w || 'http://localhost:8545'
 
 require('babel-register')
 require('babel-polyfill')
 
-const Web3 = require('web3')
-const web3 = new Web3()
-const Pudding = require('ether-pudding')
+var Web3 = require('web3')
+var web3 = new Web3()
+var Pudding = require('ether-pudding')
 Pudding.setWeb3(web3)
 
-web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'));
+web3.setProvider(new Web3.providers.HttpProvider(web3Provider));
 
-const StateChannels = require('../environments/test/contracts/StateChannels.sol.js')
+var StateChannels = require('../environments/test/contracts/StateChannels.sol.js')
 StateChannels.load(Pudding)
-const channels = StateChannels.at(contractAddress)
+var channels = StateChannels.deployed()
+// var channels = StateChannels.at(contractAddress)
 
-const { JSONStorage } = require('node-localstorage')
-const storage = new JSONStorage(storageLocation)
+var JSONStorage = require('node-localstorage').JSONStorage
+var storage = new JSONStorage(storageLocation)
 
-const globals = {
+var globals = {
   storage,
   channels,
   web3
 }
 
-const caller = require('./servers/caller.js').default(globals)
-const peer = require('./servers/peer.js').default(globals)
+var caller = require('./servers/caller.js').default(globals)
+var peer = require('./servers/peer.js').default(globals)
 
 peer.listen(peerPort, () => console.log('peer api listening on ' + peerPort))
 caller.listen(callerPort, () => console.log('caller api listening on ' + callerPort))

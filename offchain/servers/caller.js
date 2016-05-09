@@ -7,27 +7,28 @@ export default function (globals) {
   app.use(bodyParser.json())
   
   const logic = new Logic(globals)
-
-  const calls = [
-    ['proposeChannel', 'propose_channel'],
-    ['acceptChannel', 'accept_channel'],
-    ['proposeUpdate', 'propose_update'],
-    ['acceptUpdate', 'accept_update'],
-    ['postUpdate', 'post_update'],
-    ['startChallengePeriod', 'start_challenge_period']
-  ]
-
-  for (let call of calls) {
-    app.post(call[0], function (req, res) {
-      logic[call[1]](req.body)
+  
+  function handlerFactory (method) {
+    return function (req, res) {
+      logic[method](req.body)
       .then(result => {
+        console.log('result: ', result)
         res.send(result)
       })
       .catch(error => {
-        status(500).send({ error })
+        console.log(error)
+        res.status(500).send({ error: error.message })
       })
-    })
+    }
   }
-
+  
+  app.post('/propose_channel', handlerFactory('proposeChannel'))
+  app.post('/accept_channel', handlerFactory('acceptChannel'))
+  app.post('/propose_update', handlerFactory('proposeUpdate'))
+  app.post('/accept_update', handlerFactory('acceptUpdate'))
+  app.post('/post_update', handlerFactory('postUpdate'))
+  app.post('/start_challenge_period', handlerFactory('startChallengePeriod'))
+  
   return app
 }
+

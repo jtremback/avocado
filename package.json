@@ -24,10 +24,12 @@
     "babel-preset-stage-2": "^6.5.0",
     "babel-register": "^6.8.0",
     "eslint": "^2.9.0",
+    "ethereumjs-testrpc": "^2.0.7",
     "forever": "^0.15.1"
   },
   "scripts": {
     "debug": "forever -c \"node --debug-brk\" ./offchain/index.js",
+    "testrpc": "testrpc",
     "test": "truffle test ./test/stateChannels.js"
   },
   "author": "jehan.tremback@gmail.com",

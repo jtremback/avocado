@@ -8,23 +8,23 @@ export default function (globals) {
   
   const logic = new Logic(globals)
 
-  const calls = [
-    ['addProposedChannel', 'add_proposed_channel'],
-    ['addProposedUpdate', 'add_proposed_update'],
-    ['addAcceptedUpdate', 'add_accepted_update']
-  ]
-
-  for (let call of calls) {
-    app.post(call[0], function (req, res) {
-      logic[call[1]](req.body)
+  function handlerFactory (method) {
+    return function (req, res) {
+      logic[method](req.body)
       .then(result => {
+        console.log('result: ', result)
         res.send(result)
       })
       .catch(error => {
-        status(500).send({ error })
+        console.log(error)
+        res.status(500).send({ error: error.message })
       })
-    })
+    }
   }
+  
+  app.post('/add_proposed_channel', handlerFactory('addProposedChannel'))
+  app.post('/add_proposed_update', handlerFactory('addProposedUpdate'))
+  app.post('/add_accepted_update', handlerFactory('addAcceptedUpdate'))
 
   return app
 }
