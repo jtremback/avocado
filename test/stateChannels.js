@@ -27,6 +27,7 @@ function solSha3 (...args) {
 contract('StateChannels', function (accounts) {
     it('adds channel and checks state', mochaAsync(async () => {
         const meta = StateChannels.deployed();
+        const challengePeriod = 1
         const channelId = '0x1000000000000000000000000000000000000000000000000000000000000000'
         const state = '0x1111'
         const fingerprint = solSha3(
@@ -34,7 +35,8 @@ contract('StateChannels', function (accounts) {
             channelId,
             web3.eth.accounts[0],
             web3.eth.accounts[1],
-            state
+            state,
+            challengePeriod
         )
 
         const sig0 = web3.eth.sign(web3.eth.accounts[0], fingerprint)
@@ -45,7 +47,7 @@ contract('StateChannels', function (accounts) {
             web3.eth.accounts[0],
             web3.eth.accounts[1],
             state,
-            1,
+            challengePeriod,
             sig0,
             sig1
         )
@@ -65,7 +67,8 @@ contract('StateChannels', function (accounts) {
 
     it('rejects channel with existant channelId', mochaAsync(async () => {
         const meta = StateChannels.deployed();
-        const errLog = meta.Error([{ code: 1 }]);
+        const errLog = meta.Error([{ code: 1 }])
+        const challengePeriod = 1
         const channelId = '0x1000000000000000000000000000000000000000000000000000000000000000'
         const state = '0x1111'
         const fingerprint = solSha3(
@@ -73,7 +76,8 @@ contract('StateChannels', function (accounts) {
             channelId,
             web3.eth.accounts[0],
             web3.eth.accounts[1],
-            state
+            state,
+            challengePeriod
         )
 
         const sig0 = web3.eth.sign(web3.eth.accounts[0], fingerprint)
@@ -95,8 +99,9 @@ contract('StateChannels', function (accounts) {
     }));
 
     it('rejects channel with non-valid signature0', mochaAsync(async () => {
-        const meta = StateChannels.deployed();
-        const errLog = meta.Error();
+        const meta = StateChannels.deployed()
+        const errLog = meta.Error()
+        const challengePeriod = 1
         const channelId = '0x2000000000000000000000000000000000000000000000000000000000000000'
         const state = '0x1111'
         const fingerprint = solSha3(
@@ -104,7 +109,8 @@ contract('StateChannels', function (accounts) {
             channelId,
             web3.eth.accounts[0],
             web3.eth.accounts[1],
-            state
+            state,
+            challengePeriod
         )
 
         const sig0 = web3.eth.sign(web3.eth.accounts[2], fingerprint) // Wrong account
@@ -125,8 +131,9 @@ contract('StateChannels', function (accounts) {
     }));
 
     it('rejects channel with non-valid signature1', mochaAsync(async () => {
-        const meta = StateChannels.deployed();
-        const errLog = meta.Error();
+        const meta = StateChannels.deployed()
+        const errLog = meta.Error()
+        const challengePeriod = 1
         const channelId = '0x3000000000000000000000000000000000000000000000000000000000000000'
         const state = '0x1111'
         const fingerprint = solSha3(
@@ -134,7 +141,8 @@ contract('StateChannels', function (accounts) {
             channelId,
             web3.eth.accounts[0],
             web3.eth.accounts[1],
-            state
+            state,
+            challengePeriod
         )
 
         const sig0 = web3.eth.sign(web3.eth.accounts[0], fingerprint)
