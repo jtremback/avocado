@@ -96,7 +96,7 @@ export class Logic {
 
 
   // Called by the counterparty over the http api, gets added to the
-  // proposed channel box
+  // proposed channel list
   async addProposedChannel (channel) {    
     this.verifyChannel(channel)
 
@@ -107,7 +107,7 @@ export class Logic {
 
 
 
-  // Get a channel from the proposed channels box and accept it
+  // Get a channel from the proposed channel list and accept it
   async acceptProposedChannel (channelId) {
     await this.acceptChannel(
       this.storage.getItem('proposedChannels')[channelId]
@@ -173,7 +173,7 @@ export class Logic {
   
 
   // Called by the counterparty over the http api, gets verified and
-  // added to the proposed update box
+  // added to the proposed update list
   async addProposedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
     
