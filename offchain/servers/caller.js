@@ -23,6 +23,7 @@ export default function (globals) {
   }
   
   app.post('/view_proposed_channels', handlerFactory('viewProposedChannels'))
+  app.post('/accept_proposed_channel', handlerFactory('acceptProposedChannel'))
   app.post('/propose_channel', handlerFactory('proposeChannel'))
   app.post('/accept_channel', handlerFactory('acceptChannel'))
   app.post('/propose_update', handlerFactory('proposeUpdate'))

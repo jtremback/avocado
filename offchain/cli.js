@@ -13,10 +13,10 @@ var argv = require('minimist')(process.argv.slice(2), {
 var avocadoProvider = argv.a || 'http://localhost:3020'
 var request = require('request')
 
-console.log(avocadoProvider + '/' + argv._[0], JSON.stringify(argv,null,2))
+console.log('Request:\n', avocadoProvider + '/' + argv._[0], JSON.stringify(argv,null,2), '\n')
 
 post(avocadoProvider + '/' + argv._[0], argv, function (err, res, body) {
-  console.log(err || '', body)
+  console.log('Response:\n', err || '', body, '\n')
 })
 
 function post(url, body, callback) {
