@@ -16,7 +16,7 @@ var request = require('request')
 console.log(avocadoProvider + '/' + argv._[0], JSON.stringify(argv,null,2))
 
 post(avocadoProvider + '/' + argv._[0], argv, function (err, res, body) {
-  console.log(err, body)
+  console.log(err || '', body)
 })
 
 function post(url, body, callback) {

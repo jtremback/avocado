@@ -10,9 +10,9 @@ export default function (globals) {
   
   function handlerFactory (method) {
     return function (req, res) {
+      console.log('\n' + 'caller API:', method, req.body)
       logic[method](req.body)
       .then(result => {
-        console.log('result: ', result)
         res.send(result)
       })
       .catch(error => {
@@ -22,6 +22,7 @@ export default function (globals) {
     }
   }
   
+  app.post('/view_proposed_channels', handlerFactory('viewProposedChannels'))
   app.post('/propose_channel', handlerFactory('proposeChannel'))
   app.post('/accept_channel', handlerFactory('acceptChannel'))
   app.post('/propose_update', handlerFactory('proposeUpdate'))

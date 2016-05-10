@@ -10,9 +10,9 @@ export default function (globals) {
 
   function handlerFactory (method) {
     return function (req, res) {
+      console.log('\n' + 'peer API:', method, req.body)
       logic[method](req.body)
       .then(result => {
-        console.log('result: ', result)
         res.send(result)
       })
       .catch(error => {

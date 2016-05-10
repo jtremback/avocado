@@ -3,10 +3,8 @@
 import request from 'request'
 import leftPad from 'left-pad'
 import promisify from 'es6-promisify'
-
-// request.on('error', function(err) {
-//     console.log('shibby', err)
-// })
+import { Hex, Address, Bytes32 } from './types.js'
+import t from 'tcomb'
 
 const post = promisify(function (url, body, callback) {
   request.post({
@@ -30,17 +28,22 @@ export class Logic {
     this.sign = promisify(this.web3.eth.sign)
   }
   
+  // View proposed channels
+  async viewProposedChannels () {
+    return this.storage.getItem('proposedChannels')
+  }
+  
   // Propose a new channel and send to counterparty
-  async proposeChannel ({
-    myAccount,
-    myAddress,
-    counterpartyAccount,
-    counterpartyAddress,
-    counterpartyUrl,
-    channelId,
-    state,
-    challengePeriod
-  }) {
+  async proposeChannel (params) {
+    const myAccount = t.maybe(t.Number)(params.myAccount)
+    const myAddress = t.maybe(Address)(params.myAddress)
+    const counterpartyAccount = t.maybe(t.Number)(params.counterpartyAccount)
+    const counterpartyAddress = t.maybe(Address)(params.counterpartyAddress)
+    const counterpartyUrl = t.String(params.counterpartyUrl)
+    const channelId = Bytes32(params.channelId)
+    const state = Hex(params.state)
+    const challengePeriod = t.Number(params.challengePeriod)
+
     const address0 = myAddress || this.web3.eth.accounts[myAccount]
     const address1 = counterpartyAddress || this.web3.eth.accounts[counterpartyAccount]
     
@@ -52,8 +55,8 @@ export class Logic {
       state,
       challengePeriod
     )
-    
-    this.storage.setItem('channels' + channelId, {
+
+    this.storage.setItem('channels:' + channelId, {
       channelId,
       address0,
       address1,
@@ -80,38 +83,49 @@ export class Logic {
 
   // Called by the counterparty over the http api, gets added to the
   // proposed channel box
-  async addProposedChannel (proposal) {
+  async addProposedChannel (params) {
+    const channelId = Bytes32(params.channelId)
+    const address0 = Address(params.address0)
+    const address1 = Address(params.address1)
+    const state = Hex(params.state)
+    const challengePeriod = t.Number(params.challengePeriod)
+    const signature0 = Hex(params.signature0)
+    
     const fingerprint = this.solSha3(
       'newChannel',
-      proposal.channelId,
-      proposal.address0,
-      proposal.address1,
-      proposal.state,
-      proposal.challengePeriod
+      channelId,
+      address0,
+      address1,
+      state,
+      challengePeriod
     )
 
-    const valid = await this.channels.ecverify.call(fingerprint, proposal.signature0, proposal.address0)
+    const valid = await this.channels.ecverify.call(
+      fingerprint,
+      signature0,
+      address0
+    )
 
     if (!valid) {
       throw new Error('signature0 invalid')
     }
-    
-    let proposedChannels = this.storage.getItem('proposedChannels')
-    proposedChannels.push(proposal)
+
+    let proposedChannels = this.storage.getItem('proposedChannels') || []
+    proposedChannels.push(params)
     this.storage.setItem('proposedChannels', proposedChannels)
   }
 
 
 
   // Sign the opening tx and post it to the blockchain to open the channel
-  async acceptChannel ({
-    channelId,
-    address0,
-    address1,
-    state,
-    challengePeriod,
-    signature0
-  }) {
+  async acceptChannel (params) {
+    const channelId = Bytes32(params.channelId)
+    const address0 = Address(params.address0)
+    const address1 = Address(params.address1)
+    const state = Hex(params.state)
+    const challengePeriod = t.Number(params.challengePeriod)
+    const signature0 = Hex(params.signature0)
+    
     const fingerprint = this.solSha3(
       'newChannel',
       channelId,
