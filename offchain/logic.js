@@ -1,31 +1,21 @@
 /*global Uint8Array*/
 
-import request from 'request'
 import leftPad from 'left-pad'
 import promisify from 'es6-promisify'
 import { Hex, Address, Bytes32 } from './types.js'
 import t from 'tcomb'
 
-const post = promisify(function (url, body, callback) {
-  request.post({
-    url,
-    body,
-    json: true,
-  }, callback)
-})
-
 export class Logic {
   constructor({
     storage,
     channels,
-    web3
+    web3,
+    post
   }) {
     this.storage = storage
     this.channels = channels
     this.web3 = web3
-    this.solSha3 = solSha3.bind(this)
-    this.verifyUpdate = verifyUpdate.bind(this)
-    this.sign = promisify(this.web3.eth.sign)
+    this.post = post
   }
   
   
@@ -56,8 +46,10 @@ export class Logic {
     const state = Hex(params.state)
     const challengePeriod = t.Number(params.challengePeriod)
 
-    const address0 = myAddress || this.web3.eth.accounts[myAccount]
-    const address1 = counterpartyAddress || this.web3.eth.accounts[counterpartyAccount]
+    const accounts = await promisify(this.web3.eth.getAccounts)()
+
+    const address0 = myAddress || accounts[myAccount]
+    const address1 = counterpartyAddress || accounts[counterpartyAccount]
     
     const fingerprint = this.solSha3(
       'newChannel',
@@ -79,9 +71,9 @@ export class Logic {
       acceptedUpdates: []
     })
 
-    const signature0 = await this.sign(address0, fingerprint)
+    const signature0 = await promisify(this.web3.eth.sign)(address0, fingerprint)
 
-    const res = await post(counterpartyUrl + '/add_proposed_channel', {
+    const res = await this.post(counterpartyUrl + '/add_proposed_channel', {
       channelId,
       address0,
       address1,
@@ -103,6 +95,8 @@ export class Logic {
     let proposedChannels = this.storage.getItem('proposedChannels') || {}
     proposedChannels[channel.channelId] = channel
     this.storage.setItem('proposedChannels', proposedChannels)
+
+    return { success: true }
   }
 
 
@@ -120,7 +114,7 @@ export class Logic {
   async acceptChannel (channel) {
     const fingerprint = this.verifyChannel(channel)
 
-    const signature1 = await this.sign(channel.address1, fingerprint)
+    const signature1 = await promisify(this.web3.eth.sign)(channel.address1, fingerprint)
 
     await this.channels.newChannel(
       channel.channelId,
@@ -152,7 +146,7 @@ export class Logic {
       state
     )
     
-    const signature = await this.sign(
+    const signature = await promisify(this.web3.eth.sign)(
       channel['address' + channel.me],
       fingerprint
     )
@@ -167,7 +161,7 @@ export class Logic {
     channel.myProposedUpdates.push(update)
     this.storage.setItem('channels', channels)
     
-    await post(channel.counterpartyUrl + '/add_proposed_update', update)
+    await this.post(channel.counterpartyUrl + '/add_proposed_update', update)
   }
   
   
@@ -202,7 +196,7 @@ export class Logic {
       update
     })
 
-    const signature = await this.sign(
+    const signature = await promisify(this.web3.eth.sign)(
       channel['address' + channel.me],
       fingerprint
     )
@@ -213,7 +207,7 @@ export class Logic {
     
     this.storeChannel(channel)
     
-    await post(channel.counterpartyUrl + '/add_accepted_update', update)
+    await this.post(channel.counterpartyUrl + '/add_accepted_update', update)
   }
 
 
@@ -280,7 +274,7 @@ export class Logic {
       channelId
     )
     
-    const signature = await this.sign(
+    const signature = await promisify(this.web3.eth.sign)(
       channel['address' + channel.me],
       fingerprint
     )
@@ -299,81 +293,108 @@ export class Logic {
     channels[channel.channelId] = channel
     this.storage.setItem('channels', channels)
   }
-}
-
-
-
-// This checks that the signature is valid
-async function verifyChannel(channel) {
-  const channelId = Bytes32(channel.channelId)
-  const address0 = Address(channel.address0)
-  const address1 = Address(channel.address1)
-  const state = Hex(channel.state)
-  const challengePeriod = t.Number(channel.challengePeriod)
-  const signature0 = Hex(channel.signature0)
-
-  const fingerprint = this.solSha3(
-    'newChannel',
-    channelId,
-    address0,
-    address1,
-    state,
-    challengePeriod
-  )
-
-  const valid = await this.channels.ecverify.call(
-    fingerprint,
-    signature0,
-    address0
-  )
-
-  if (!valid) {
-    throw new Error('signature0 invalid')
-  }
   
-  return fingerprint
-}
-
-
-
-// This checks that their signature is valid, and optionally
-// checks my signature as well
-async function verifyUpdate ({channel, update, checkMySignature}) {
-  const channelId = Bytes32(update.channelId)
-  const state = Hex(update.state)
-  const sequenceNumber = t.Number(update.challengePeriod)
-  t.maybe(t.Boolean)(checkMySignature)
   
-  const fingerprint = this.solSha3(
-    'updateState',
-    channelId,
-    sequenceNumber,
-    state
-  )
+  
+  // This checks that the signature is valid
+  async verifyChannel(channel) {
+    const channelId = Bytes32(channel.channelId)
+    const address0 = Address(channel.address0)
+    const address1 = Address(channel.address1)
+    const state = Hex(channel.state)
+    const challengePeriod = t.Number(channel.challengePeriod)
+    const signature0 = Hex(channel.signature0)
 
-  let valid = await this.channels.ecverify.call(
-    fingerprint,
-    update['signature' + swap[channel.me]],
-    channel['address' + swap[channel.me]]
-  )
+    const fingerprint = this.solSha3(
+      'newChannel',
+      channelId,
+      address0,
+      address1,
+      state,
+      challengePeriod
+    )
 
-  if (!valid) {
-    throw new Error('signature' + swap[channel.me] + ' invalid')
-  }
-
-  if (checkMySignature) {
-    let valid = await this.channels.ecverify.call(
+    const valid = await this.channels.ecverify.call(
       fingerprint,
-      update['signature' + channel.me],
-      channel['address' + channel.me]
+      signature0,
+      address0
     )
 
     if (!valid) {
-      throw new Error('signature' + channel.me + ' invalid')
+      throw new Error('signature0 invalid')
     }
+    
+    return fingerprint
   }
 
-  return fingerprint
+
+
+  // This checks that their signature is valid, and optionally
+  // checks my signature as well
+  async verifyUpdate ({channel, update, checkMySignature}) {
+    const channelId = Bytes32(update.channelId)
+    const state = Hex(update.state)
+    const sequenceNumber = t.Number(update.challengePeriod)
+    t.maybe(t.Boolean)(checkMySignature)
+    
+    const fingerprint = this.solSha3(
+      'updateState',
+      channelId,
+      sequenceNumber,
+      state
+    )
+
+    let valid = await this.channels.ecverify.call(
+      fingerprint,
+      update['signature' + swap[channel.me]],
+      channel['address' + swap[channel.me]]
+    )
+
+    if (!valid) {
+      throw new Error('signature' + swap[channel.me] + ' invalid')
+    }
+
+    if (checkMySignature) {
+      let valid = await this.channels.ecverify.call(
+        fingerprint,
+        update['signature' + channel.me],
+        channel['address' + channel.me]
+      )
+
+      if (!valid) {
+        throw new Error('signature' + channel.me + ' invalid')
+      }
+    }
+
+    return fingerprint
+  }
+
+
+
+  // Polyfill to get the sha3 to work the same as in solidity
+  solSha3 (...args) {
+    args = args.map(arg => {
+      if (typeof arg === 'string') {
+        if (arg.substring(0, 2) === '0x') {
+          return arg.slice(2)
+        } else {
+          return this.web3.toHex(arg).slice(2)
+        }
+      }
+
+      if (typeof arg === 'number') {
+        return leftPad((arg).toString(16), 64, 0)
+      }
+      
+      else {
+        return ''
+      }
+    })
+
+    args = args.join('')
+
+    return '0x' + this.web3.sha3(args, { encoding: 'hex' })
+  }
 }
 
 const swap = [1, 0]
@@ -397,28 +418,4 @@ function highestProposedSequenceNumber (channel) {
     myHighestSequenceNumber,
     theirHighestSequenceNumber
   )
-}
-
-function solSha3 (...args) {
-  args = args.map(arg => {
-    if (typeof arg === 'string') {
-      if (arg.substring(0, 2) === '0x') {
-        return arg.slice(2)
-      } else {
-        return this.web3.toHex(arg).slice(2)
-      }
-    }
-
-    if (typeof arg === 'number') {
-      return leftPad((arg).toString(16), 64, 0)
-    }
-    
-    else {
-      return ''
-    }
-  })
-
-  args = args.join('')
-
-  return '0x' + this.web3.sha3(args, { encoding: 'hex' })
 }

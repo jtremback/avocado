@@ -6,6 +6,8 @@
 // -w web3 provider
 var argv = require('minimist')(process.argv.slice(2))
 var path = require('path')
+var request = require('request')
+var promisify = require('es6-promisify')
 
 var peerPort = argv.c || 4020
 var callerPort = argv.p || 3020
@@ -18,23 +20,31 @@ require('babel-polyfill')
 
 var Web3 = require('web3')
 var web3 = new Web3()
+web3.setProvider(new Web3.providers.HttpProvider(web3Provider));
+
 var Pudding = require('ether-pudding')
 Pudding.setWeb3(web3)
-
-web3.setProvider(new Web3.providers.HttpProvider(web3Provider));
 
 var StateChannels = require('../environments/test/contracts/StateChannels.sol.js')
 StateChannels.load(Pudding)
 var channels = StateChannels.deployed()
-// var channels = StateChannels.at(contractAddress)
 
 var JSONStorage = require('node-localstorage').JSONStorage
 var storage = new JSONStorage(storageLocation)
 
+const post = promisify(function (url, body, callback) {
+  request.post({
+    url,
+    body,
+    json: true,
+  }, callback)
+})
+
 var globals = {
   storage,
   channels,
-  web3
+  web3,
+  post
 }
 
 var caller = require('./servers/caller.js').default(globals)

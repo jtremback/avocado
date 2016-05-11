@@ -26,8 +26,10 @@ export default function (globals) {
   app.post('/accept_proposed_channel', handlerFactory('acceptProposedChannel'))
   app.post('/propose_channel', handlerFactory('proposeChannel'))
   app.post('/accept_channel', handlerFactory('acceptChannel'))
+  app.post('/accept_proposed_channel', handlerFactory('acceptProposedChannel'))
   app.post('/propose_update', handlerFactory('proposeUpdate'))
   app.post('/accept_update', handlerFactory('acceptUpdate'))
+  app.post('/accept_last_update', handlerFactory('acceptLastUpdate'))
   app.post('/post_update', handlerFactory('postUpdate'))
   app.post('/start_challenge_period', handlerFactory('startChallengePeriod'))
   

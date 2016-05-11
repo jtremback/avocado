@@ -33,7 +33,8 @@
     "debug": "forever -c \"node --debug-brk\" ./offchain/index.js",
     "testrpc": "testrpc",
     "test": "truffle test ./test/stateChannels.js",
-    "watch_offchain": "nodemon ./offchain/index.js"
+    "watch_offchain": "nodemon ./offchain/index.js",
+    "watch_offchain_tests": "nodemon ./offchain/test/index.js"
   },
   "author": "jehan.tremback@gmail.com",
   "license": "MIT",
