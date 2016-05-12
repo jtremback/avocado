@@ -1,7 +1,5 @@
 import assert from 'assert'
 
-
-
 export async function test (alice, bob) {
   await alice.proposeChannel({
     myAccount: 0,
@@ -17,5 +15,10 @@ export async function test (alice, bob) {
   await alice.proposeUpdate({
     channelId: '0x1000000000000000000000000000000000000000000000000000000000000000',
     state: '0x3333'
+  })
+  
+  await bob.proposeUpdate({
+    channelId: '0x1000000000000000000000000000000000000000000000000000000000000000',
+    state: '0x4444'
   })
 }

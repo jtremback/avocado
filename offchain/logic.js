@@ -193,7 +193,7 @@ export class Logic {
     channel.myProposedUpdates.push(update)
     this.storage.setItem('channels', channels)
     
-    await this.post(channel.counterpartyUrl + '/add_proposed_update', update)
+    checkSuccess(await this.post(channel.counterpartyUrl + '/add_proposed_update', update))
   }
   
   
@@ -201,20 +201,20 @@ export class Logic {
   // Called by the counterparty over the http api, gets verified and
   // added to the proposed update list
   async addProposedUpdate (update) {
+    throw new Error('clumping')
     const channel = this.storage.getItem('channels')[update.channelId]
     
     this.verifyUpdate({
       channel,
       update
     })
-    
     if (update.sequenceNumber <= highestProposedSequenceNumber(channel)) {
       throw new Error('sequenceNumber too low')
     }
     
     channel.theirProposedUpdates.push(update)
     
-    this.storageChannel(channel)
+    this.storeChannel(channel)
   }
 
   
