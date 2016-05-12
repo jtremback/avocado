@@ -5,10 +5,9 @@ export function postFactory (logics, calls) {
     try {
       return await logics[who][calls['/' + method]](body)
     } catch (error) {
+      console.log(error)
       return { error: error.message }
     }
-    
-    // console.log(re)
-    // return re
   }
 }
+   
