@@ -89,6 +89,7 @@ export class Logic {
       state,
       challengePeriod,
       signature0,
+      me: 0,
       theirProposedUpdates: [],
       myProposedUpdates: [],
       acceptedUpdates: []
@@ -122,7 +123,7 @@ export class Logic {
     }
 
     await this.acceptChannel(
-      this.storage.getItem('proposedChannels')[channelId]
+      channel
     )
   }
 
@@ -144,7 +145,13 @@ export class Logic {
       channel.signature1
     )
     
-    
+    this.storeChannel({
+      ...channel,
+      me: 1,
+      theirProposedUpdates: [],
+      myProposedUpdates: [],
+      acceptedUpdates: []
+    })
   }
 
 
@@ -155,8 +162,11 @@ export class Logic {
     const state = Hex(params.state)
 
     const channels = this.storage.getItem('channels') || {}
-
     const channel = channels[channelId]
+    
+    if (!channel) {
+      throw new Error('cannot find channel')
+    }
     
     const sequenceNumber = highestProposedSequenceNumber(channel) + 1
     
@@ -171,6 +181,7 @@ export class Logic {
       channel['address' + channel.me],
       fingerprint
     )
+
 
     const update = {
       channelId,
@@ -427,13 +438,19 @@ function highestAcceptedSequenceNumber (channel) {
 }
 
 function highestProposedSequenceNumber (channel) {
-  const myHighestSequenceNumber = channel.myProposedUpdates[
-    channel.myProposedUpdates.length - 1
-  ].sequenceNumber
+  const myHighestSequenceNumber = 
+  channel.myProposedUpdates.length > 0 ?   
+    channel.myProposedUpdates[
+      channel.myProposedUpdates.length - 1
+    ].sequenceNumber
+  : 0
   
-  const theirHighestSequenceNumber = channel.myProposedUpdates[
-    channel.myProposedUpdates.length - 1
-  ].sequenceNumber
+  const theirHighestSequenceNumber = 
+  channel.theirProposedUpdates.length > 0 ?   
+    channel.theirProposedUpdates[
+      channel.theirProposedUpdates.length - 1
+    ].sequenceNumber
+  : 0
   
   return Math.max(
     myHighestSequenceNumber,
