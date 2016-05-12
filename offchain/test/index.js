@@ -58,8 +58,8 @@ export default async function () {
   alice.fakeStore = aliceFakeStore
   bob.fakeStore = bobFakeStore
 
-  alice.post = postFactory({alice, bob}, calls)
-  bob.post = postFactory({alice, bob}, calls)
+  alice.post = postFactory({alice, bob}, calls, 'alice')
+  bob.post = postFactory({alice, bob}, calls, 'bob')
 
   return test(alice, bob)
 }

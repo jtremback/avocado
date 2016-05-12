@@ -93,8 +93,8 @@ export class Logic {
       state,
       challengePeriod,
       signature0,
-      counterpartyUrl,
       me: 0,
+      counterpartyUrl,
       theirProposedUpdates: [],
       myProposedUpdates: [],
       acceptedUpdates: []
@@ -105,8 +105,10 @@ export class Logic {
 
   // Called by the counterparty over the http api, gets added to the
   // proposed channel list
-  async addProposedChannel (channel) {
+  async addProposedChannel (channel, counterpartyUrl) {
+    t.String(counterpartyUrl)
     await this.verifyChannel(channel)
+    channel.counterpartyUrl = counterpartyUrl
 
     let proposedChannels = this.storage.getItem('proposedChannels') || {}
     proposedChannels[channel.channelId] = channel
@@ -163,8 +165,7 @@ export class Logic {
     const channelId = Bytes32(params.channelId)
     const state = Hex(params.state)
 
-    const channels = this.storage.getItem('channels') || {}
-    const channel = channels[channelId]
+    const channel = this.storage.getItem('channels')[channelId]
     
     if (!channel) {
       throw new Error('cannot find channel')
@@ -193,7 +194,7 @@ export class Logic {
     }
 
     channel.myProposedUpdates.push(update)
-    this.storage.setItem('channels', channels)
+    this.storeChannel(channel)
     
     checkSuccess(await this.post(channel.counterpartyUrl + '/add_proposed_update', update))
   }
@@ -204,7 +205,6 @@ export class Logic {
   // added to the proposed update list
   async addProposedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
-    
     this.verifyUpdate({
       channel,
       update
@@ -333,6 +333,8 @@ export class Logic {
   
   // This checks that the signature is valid
   async verifyChannel(channel) {
+    // console.log(channel)
+    // console.trace()
     const channelId = Bytes32(channel.channelId)
     const address0 = Address(channel.address0)
     const address1 = Address(channel.address1)
