@@ -15,11 +15,12 @@ test('create channel', async t => {
     challengePeriod: 1
   })
   
-  console.log(alice.fakeStore.channels[idOne])
-  
   await bob.acceptProposedChannel(idOne)
-  
-  console.log(bob.fakeStore.channels[idOne])
+
+  await alice.proposeUpdate({
+    channelId: idOne,
+    state: '0x3333'
+  })
   
   t.end()
 })

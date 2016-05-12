@@ -198,6 +198,7 @@ export class Logic {
   // added to the proposed update list
   async addProposedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
+    console.log(update)
     this.verifyUpdate({
       channel,
       update
@@ -364,7 +365,8 @@ export class Logic {
   async verifyUpdate ({channel, update, checkMySignature}) {
     const channelId = Bytes32(update.channelId)
     const state = Hex(update.state)
-    const sequenceNumber = t.Number(update.challengePeriod)
+    const sequenceNumber = t.Number(update.sequenceNumber)
+    
     t.maybe(t.Boolean)(checkMySignature)
     
     const fingerprint = this.solSha3(
