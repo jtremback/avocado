@@ -6,8 +6,12 @@ import { Hex, Address, Bytes32 } from './types.js'
 import t from 'tcomb'
 
 function checkSuccess (res) {
+  if (!res) {
+    throw new Error('no response')
+  }
+  
   if (res.error) {
-    throw new Error(res.error)
+    throw '(peer error) ' + res.error
   }
   
   if (!res.success) {
@@ -89,6 +93,7 @@ export class Logic {
       state,
       challengePeriod,
       signature0,
+      counterpartyUrl,
       me: 0,
       theirProposedUpdates: [],
       myProposedUpdates: [],
@@ -101,7 +106,6 @@ export class Logic {
   // Called by the counterparty over the http api, gets added to the
   // proposed channel list
   async addProposedChannel (channel) {
-
     await this.verifyChannel(channel)
 
     let proposedChannels = this.storage.getItem('proposedChannels') || {}
@@ -115,7 +119,6 @@ export class Logic {
 
   // Get a channel from the proposed channel list and accept it
   async acceptProposedChannel (channelId) {
-
     const channel = this.storage.getItem('proposedChannels')[channelId]
     
     if (!channel) {
@@ -131,7 +134,6 @@ export class Logic {
 
   // Sign the opening tx and post it to the blockchain to open the channel
   async acceptChannel (channel) {
-
     const fingerprint = await this.verifyChannel(channel)
     const signature1 = await promisify(this.web3.eth.sign)(channel.address1, fingerprint)
 
@@ -142,7 +144,7 @@ export class Logic {
       channel.state,
       channel.challengePeriod,
       channel.signature0,
-      channel.signature1
+      signature1
     )
     
     this.storeChannel({
@@ -201,7 +203,6 @@ export class Logic {
   // Called by the counterparty over the http api, gets verified and
   // added to the proposed update list
   async addProposedUpdate (update) {
-    throw new Error('clumping')
     const channel = this.storage.getItem('channels')[update.channelId]
     
     this.verifyUpdate({
@@ -215,6 +216,8 @@ export class Logic {
     channel.theirProposedUpdates.push(update)
     
     this.storeChannel(channel)
+    
+    return { success: true }
   }
 
   
