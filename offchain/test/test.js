@@ -6,8 +6,8 @@ const idOne = '0x000000000000000000000000000000000000000000000000000000000000000
 test('create channel', async t => {
   const {alice, bob} = await setup()
   await alice.proposeChannel({
-    myAccount: 0,
-    counterpartyAccount: 1,
+    myAddress: alice.web3.eth.accounts[0],
+    counterpartyAddress: bob.web3.eth.accounts[1],
     counterpartyUrl: 'bob',
     myUrl: 'bob',
     channelId: idOne,
@@ -19,6 +19,7 @@ test('create channel', async t => {
   
   t.end()
 })
+
 
 // test('this test will successfully pass', async (t) => {
 //     t.equal(await doSomethingAsync(), 'async!')

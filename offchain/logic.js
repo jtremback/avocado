@@ -52,19 +52,12 @@ export class Logic {
   
   // Propose a new channel and send to counterparty
   async proposeChannel (params) {
-    const myAccount = t.maybe(t.Number)(params.myAccount)
-    const myAddress = t.maybe(Address)(params.myAddress)
-    const counterpartyAccount = t.maybe(t.Number)(params.counterpartyAccount)
-    const counterpartyAddress = t.maybe(Address)(params.counterpartyAddress)
     const counterpartyUrl = t.String(params.counterpartyUrl)
     const channelId = Bytes32(params.channelId)
+    const address0 = Address(params.myAddress)
+    const address1 = Address(params.counterpartyAddress)
     const state = Hex(params.state)
     const challengePeriod = t.Number(params.challengePeriod)
-
-    const accounts = await promisify(this.web3.eth.getAccounts)()
-
-    const address0 = myAddress || accounts[myAccount]
-    const address1 = counterpartyAddress || accounts[counterpartyAccount]
     
     const fingerprint = this.solSha3(
       'newChannel',
