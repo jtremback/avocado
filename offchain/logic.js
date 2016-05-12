@@ -5,6 +5,17 @@ import promisify from 'es6-promisify'
 import { Hex, Address, Bytes32 } from './types.js'
 import t from 'tcomb'
 
+function checkSuccess (res) {
+  if (res.error) {
+    throw new Error(res.error)
+  }
+  
+  if (!res.success) {
+    throw new Error('peer returned unexpected value')
+  }
+}
+
+
 export class Logic {
   constructor({
     storage,
@@ -60,37 +71,37 @@ export class Logic {
       challengePeriod
     )
 
-    this.storage.setItem('channels:' + channelId, {
-      channelId,
-      address0,
-      address1,
-      state,
-      challengePeriod,
-      theirProposedUpdates: [],
-      myProposedUpdates: [],
-      acceptedUpdates: []
-    })
-
     const signature0 = await promisify(this.web3.eth.sign)(address0, fingerprint)
 
-    const res = await this.post(counterpartyUrl + '/add_proposed_channel', {
+    checkSuccess(await this.post(counterpartyUrl + '/add_proposed_channel', {
       channelId,
       address0,
       address1,
       state,
       challengePeriod,
       signature0
+    }))
+
+    this.storeChannel({
+      channelId,
+      address0,
+      address1,
+      state,
+      challengePeriod,
+      signature0,
+      theirProposedUpdates: [],
+      myProposedUpdates: [],
+      acceptedUpdates: []
     })
-    
-    return res.body
   }
 
 
 
   // Called by the counterparty over the http api, gets added to the
   // proposed channel list
-  async addProposedChannel (channel) {    
-    this.verifyChannel(channel)
+  async addProposedChannel (channel) {
+
+    await this.verifyChannel(channel)
 
     let proposedChannels = this.storage.getItem('proposedChannels') || {}
     proposedChannels[channel.channelId] = channel
@@ -103,6 +114,13 @@ export class Logic {
 
   // Get a channel from the proposed channel list and accept it
   async acceptProposedChannel (channelId) {
+
+    const channel = this.storage.getItem('proposedChannels')[channelId]
+    
+    if (!channel) {
+      throw new Error('no channel with that id')
+    }
+
     await this.acceptChannel(
       this.storage.getItem('proposedChannels')[channelId]
     )
@@ -112,8 +130,8 @@ export class Logic {
 
   // Sign the opening tx and post it to the blockchain to open the channel
   async acceptChannel (channel) {
-    const fingerprint = this.verifyChannel(channel)
 
+    const fingerprint = await this.verifyChannel(channel)
     const signature1 = await promisify(this.web3.eth.sign)(channel.address1, fingerprint)
 
     await this.channels.newChannel(
@@ -125,6 +143,8 @@ export class Logic {
       channel.signature0,
       channel.signature1
     )
+    
+    
   }
 
 
@@ -133,8 +153,9 @@ export class Logic {
   async proposeUpdate (params) {
     const channelId = Bytes32(params.channelId)
     const state = Hex(params.state)
-    
-    const channels = this.storage.getItem('channels')
+
+    const channels = this.storage.getItem('channels') || {}
+
     const channel = channels[channelId]
     
     const sequenceNumber = highestProposedSequenceNumber(channel) + 1
@@ -289,7 +310,7 @@ export class Logic {
 
   // Gets the channels list, adds the channel, saves the channels list 
   storeChannel (channel) {
-    const channels = this.storage.getItem('channels')
+    const channels = this.storage.getItem('channels') || {}
     channels[channel.channelId] = channel
     this.storage.setItem('channels', channels)
   }
@@ -319,11 +340,11 @@ export class Logic {
       signature0,
       address0
     )
-
+    
     if (!valid) {
       throw new Error('signature0 invalid')
     }
-    
+
     return fingerprint
   }
 
