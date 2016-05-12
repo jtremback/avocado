@@ -1,4 +1,4 @@
-import test from 'tape-async'
+import test from 'blue-tape'
 import setup from './setup.js'
 
 const idOne = '0x0000000000000000000000000000000000000000000000000000000000000001'
@@ -21,8 +21,6 @@ test('create channel', async t => {
     channelId: idOne,
     state: '0x3333'
   })
-  
-  t.end()
 })
 
 // export async function test (alice, bob) {

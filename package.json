@@ -26,11 +26,11 @@
     "babel-preset-es2015-node5": "^1.2.0",
     "babel-preset-stage-2": "^6.5.0",
     "babel-register": "^6.8.0",
+    "blue-tape": "^0.2.0",
     "eslint": "^2.9.0",
     "ethereumjs-testrpc": "^2.0.7",
     "forever": "^0.15.1",
-    "nodemon": "^1.9.2",
-    "tape-async": "^2.1.0"
+    "nodemon": "^1.9.2"
   },
   "scripts": {
     "debug": "forever -c \"node --debug-brk\" ./offchain/index.js",

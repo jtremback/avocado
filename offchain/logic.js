@@ -198,7 +198,6 @@ export class Logic {
   // added to the proposed update list
   async addProposedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
-    console.log(update)
     this.verifyUpdate({
       channel,
       update
