@@ -1,7 +1,7 @@
 /*global Uint8Array*/
 
 import leftPad from 'left-pad'
-import promisify from 'es6-promisify'
+import p from 'es6-promisify'
 import { Hex, Address, Bytes32 } from './types.js'
 import t from 'tcomb'
 
@@ -68,7 +68,7 @@ export class Logic {
       challengePeriod
     )
 
-    const signature0 = await promisify(this.web3.eth.sign)(address0, fingerprint)
+    const signature0 = await p(this.web3.eth.sign)(address0, fingerprint)
 
     checkSuccess(await this.post(counterpartyUrl + '/add_proposed_channel', {
       channelId,
@@ -130,7 +130,7 @@ export class Logic {
   // Sign the opening tx and post it to the blockchain to open the channel
   async acceptChannel (channel) {
     const fingerprint = await this.verifyChannel(channel)
-    const signature1 = await promisify(this.web3.eth.sign)(channel.address1, fingerprint)
+    const signature1 = await p(this.web3.eth.sign)(channel.address1, fingerprint)
 
     await this.channels.newChannel(
       channel.channelId,
@@ -173,7 +173,7 @@ export class Logic {
       state
     )
     
-    const signature = await promisify(this.web3.eth.sign)(
+    const signature = await p(this.web3.eth.sign)(
       channel['address' + channel.me],
       fingerprint
     )
@@ -224,7 +224,7 @@ export class Logic {
       update
     })
 
-    const signature = await promisify(this.web3.eth.sign)(
+    const signature = await p(this.web3.eth.sign)(
       channel['address' + channel.me],
       fingerprint
     )
@@ -302,7 +302,7 @@ export class Logic {
       channelId
     )
     
-    const signature = await promisify(this.web3.eth.sign)(
+    const signature = await p(this.web3.eth.sign)(
       channel['address' + channel.me],
       fingerprint
     )

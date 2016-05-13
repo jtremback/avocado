@@ -1,11 +1,14 @@
-export default async function () {
-  const Logic = require('../logic.js').Logic
-  const Web3 = require('web3')
-  const Pudding = require('ether-pudding')
+import { Logic } from '../logic.js'
+import Web3 from 'web3'
+import Pudding from 'ether-pudding'
+import p from 'es6-promisify'
 
+export default async function () {
   const web3 = new Web3()
   web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
-  web3.eth.defaultAccount = web3.eth.accounts[0]
+  
+  const accounts = await p(web3.eth.getAccounts)()
+  web3.eth.defaultAccount = accounts[0]
   
   Pudding.setWeb3(web3)
   const StateChannels = require('../../environments/test/contracts/StateChannels.sol.js')
@@ -64,5 +67,5 @@ export default async function () {
   alice.post = fakePostFactory({alice, bob}, calls, 'alice')
   bob.post = fakePostFactory({alice, bob}, calls, 'bob')
 
-  return { alice, bob }
+  return { alice, bob, accounts, web3 }
 }
