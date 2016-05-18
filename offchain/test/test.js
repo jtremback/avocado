@@ -94,6 +94,12 @@ test('happy path', async t => {
       sequenceNumber: '1'
     })
   })
+  
+  test('try close', async t => {
+    await alice.tryClose(idOne) // Do it twice to advance blockchain state
+    await alice.tryClose(idOne)
+    t.equal(bn2s(await alice.getChannel(idOne)).phase, '2')
+  })
 })
 
 function snapshot(provider, callback) {

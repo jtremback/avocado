@@ -332,9 +332,14 @@ export class Logic {
       channel['address' + channel.me]
     )
   }
-  
 
-
+  async tryClose (channelId) {
+    Bytes32(channelId)
+    
+    const channel = this.storage.getItem('channels')[channelId]
+    
+    await this.channels.tryClose(channelId)
+  }
 
   // Gets the channels list, adds the channel, saves the channels list 
   storeChannel (channel) {
