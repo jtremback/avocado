@@ -67,6 +67,20 @@ test('setup', async t => {
       expectedUpdate
     )
   })
+  
+  test('post update to blockchain', async t => {
+    await alice.postLastUpdate(idOne)
+    
+    t.deepEqual(bn2s(await alice.getChannel(idOne)), {
+      address0: '0x5c44c7de2dc4177d94d831e213fc7c17e8a4d0d8',
+      address1: '0x314092f83a2a3be9b04d6fd1e9c4ecd8caae32ff',
+      challengePeriod: '1',
+      closingBlock: '0',
+      phase: '0',
+      sequenceNumber: '1',
+      state: '0x3333'
+    })
+  })
 })
 
 function snapshot(provider, callback) {
