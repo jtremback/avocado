@@ -52,10 +52,19 @@ export class Logic {
   // and return it
   async getChannel (channelId) {
     Bytes32(channelId)
-    const savedChannel = await this.channels.getChannel.call(
+    const channel = await this.channels.getChannel.call(
       channelId
     )
-    return savedChannel
+    
+    return {
+      address0: channel[0],
+      address1: channel[1],
+      phase: channel[2],
+      challengePeriod: channel[3],
+      closingBlock: channel[4],
+      state: channel[5],
+      sequenceNumber: channel[6],
+    }
   }  
   
   // Propose a new channel and send to counterparty
@@ -206,7 +215,7 @@ export class Logic {
   // added to the proposed update list
   async addProposedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
-    this.verifyUpdate({
+    await this.verifyUpdate({
       channel,
       update
     })
@@ -227,7 +236,7 @@ export class Logic {
   async acceptUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
     
-    const fingerprint = this.verifyUpdate({
+    const fingerprint = await this.verifyUpdate({
       channel,
       update
     })
@@ -254,7 +263,7 @@ export class Logic {
       channel.theirProposedUpdates.length - 1
     ]
     
-    this.acceptUpdate(lastUpdate)
+    await this.acceptUpdate(lastUpdate)
   }
   
 
@@ -264,11 +273,13 @@ export class Logic {
   async addAcceptedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
     
-    this.verifyUpdate({
+    await this.verifyUpdate({
       channel,
       update,
       checkMySignature: true
     })
+
+    
 
     if (update.sequenceNumber <= highestAcceptedSequenceNumber(channel)) {
       throw new Error('sequenceNumber too low')
@@ -334,8 +345,6 @@ export class Logic {
   
   // This checks that the signature is valid
   async verifyChannel(channel) {
-    // console.log(channel)
-    // console.trace()
     const channelId = Bytes32(channel.channelId)
     const address0 = Address(channel.address0)
     const address1 = Address(channel.address1)
@@ -439,9 +448,10 @@ export class Logic {
 const swap = [1, 0]
 
 function highestAcceptedSequenceNumber (channel) {
-  return channel.acceptedUpdates[
+  const highestAcceptedUpdate = channel.acceptedUpdates[
     channel.acceptedUpdates.length - 1
-  ].sequenceNumber
+  ]
+  return highestAcceptedUpdate && highestAcceptedUpdate.sequenceNumber
 }
 
 function highestProposedSequenceNumber (channel) {
