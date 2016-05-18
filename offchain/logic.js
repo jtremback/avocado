@@ -50,7 +50,7 @@ export class Logic {
   
   // Get the channel from the blockchain, update the local,
   // and return it
-  async getChannel (channelId) {
+  async getBlockchainChannel (channelId) {
     Bytes32(channelId)
     const channel = await this.contract.getChannel.call(
       channelId

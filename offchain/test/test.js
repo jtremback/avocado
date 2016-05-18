@@ -23,7 +23,7 @@ test('happy path', async t => {
     })
 
     await bob.acceptProposedChannel(idOne)
-    t.deepEqual(bn2s(await bob.getChannel(idOne)), {
+    t.deepEqual(bn2s(await bob.getBlockchainChannel(idOne)), {
       address0: '0x5c44c7de2dc4177d94d831e213fc7c17e8a4d0d8',
       address1: '0x314092f83a2a3be9b04d6fd1e9c4ecd8caae32ff',
       challengePeriod: '1',
@@ -71,7 +71,7 @@ test('happy path', async t => {
   test('post update to blockchain', async t => {
     await alice.postLastUpdate(idOne)
     
-    t.deepEqual(bn2s(await alice.getChannel(idOne)), {
+    t.deepEqual(bn2s(await alice.getBlockchainChannel(idOne)), {
       address0: '0x5c44c7de2dc4177d94d831e213fc7c17e8a4d0d8',
       address1: '0x314092f83a2a3be9b04d6fd1e9c4ecd8caae32ff',
       challengePeriod: '1',
@@ -84,7 +84,7 @@ test('happy path', async t => {
   
   test('start challenge period', async t => {
     await alice.startChallengePeriod(idOne)
-    t.deepEqual(bn2s(await alice.getChannel(idOne)), {
+    t.deepEqual(bn2s(await alice.getBlockchainChannel(idOne)), {
       address0: '0x5c44c7de2dc4177d94d831e213fc7c17e8a4d0d8',
       address1: '0x314092f83a2a3be9b04d6fd1e9c4ecd8caae32ff',
       phase: '1',
@@ -98,7 +98,7 @@ test('happy path', async t => {
   test('try close', async t => {
     await alice.tryClose(idOne) // Do it twice to advance blockchain state
     await alice.tryClose(idOne)
-    t.equal(bn2s(await alice.getChannel(idOne)).phase, '2')
+    t.equal(bn2s(await alice.getBlockchainChannel(idOne)).phase, '2')
   })
 })
 
