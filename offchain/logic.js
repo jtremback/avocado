@@ -23,12 +23,12 @@ function checkSuccess (res) {
 export class Logic {
   constructor({
     storage,
-    channels,
+    contract,
     web3,
     post
   }) {
     this.storage = storage
-    this.channels = channels
+    this.contract = contract
     this.web3 = web3
     this.post = post
   }
@@ -52,7 +52,7 @@ export class Logic {
   // and return it
   async getChannel (channelId) {
     Bytes32(channelId)
-    const channel = await this.channels.getChannel.call(
+    const channel = await this.contract.getChannel.call(
       channelId
     )
     
@@ -149,7 +149,7 @@ export class Logic {
     const fingerprint = await this.verifyChannel(channel)
     const signature1 = await p(this.web3.eth.sign)(channel.address1, fingerprint)
 
-    await this.channels.newChannel(
+    await this.contract.newChannel(
       channel.channelId,
       channel.address0,
       channel.address1,
@@ -299,7 +299,7 @@ export class Logic {
     const channel = this.storage.getItem('channels')[channelId]
     const update = channel.acceptedUpdates[channel.acceptedUpdates.length - 1]
 
-    await this.channels.updateState(
+    await this.contract.updateState(
       update.channelId,
       update.sequenceNumber,
       update.state,
@@ -326,7 +326,7 @@ export class Logic {
       fingerprint
     )
     
-    await this.channels.startChallengePeriod(
+    await this.contract.startChallengePeriod(
       channelId,
       signature,
       channel['address' + channel.me]
@@ -338,7 +338,7 @@ export class Logic {
     
     const channel = this.storage.getItem('channels')[channelId]
     
-    await this.channels.tryClose(channelId)
+    await this.contract.tryClose(channelId)
   }
 
   // Gets the channels list, adds the channel, saves the channels list 
@@ -368,7 +368,7 @@ export class Logic {
       challengePeriod
     )
 
-    const valid = await this.channels.ecverify.call(
+    const valid = await this.contract.ecverify.call(
       fingerprint,
       signature0,
       address0
@@ -399,7 +399,7 @@ export class Logic {
       state
     )
 
-    let valid = await this.channels.ecverify.call(
+    let valid = await this.contract.ecverify.call(
       fingerprint,
       update['signature' + swap[channel.me]],
       channel['address' + swap[channel.me]]
@@ -410,7 +410,7 @@ export class Logic {
     }
 
     if (checkMySignature) {
-      let valid = await this.channels.ecverify.call(
+      let valid = await this.contract.ecverify.call(
         fingerprint,
         update['signature' + channel.me],
         channel['address' + channel.me]

@@ -13,7 +13,7 @@ export default async function () {
   Pudding.setWeb3(web3)
   const StateChannels = require('../../environments/test/contracts/StateChannels.sol.js')
   StateChannels.load(Pudding)
-  const channels = await StateChannels.new()
+  const contract = await StateChannels.new()
 
   const aliceFakeStore = {}
   const bobFakeStore = {}
@@ -36,12 +36,12 @@ export default async function () {
     '/add_accepted_update': 'addAcceptedUpdate',
   }
   
-  function fakePostFactory (logics, calls, myUrl) {
+  function fakePostFactory (apis, calls, myUrl) {
     return async function post (url, body) {
       const [ who, method ] = url.split('/')
       
       try {
-        return await logics[who][calls['/' + method]](body, myUrl)
+        return await apis[who][calls['/' + method]](body, myUrl)
       } catch (error) {
         console.log(error)
         return { error: error.message }
@@ -51,13 +51,13 @@ export default async function () {
 
   const alice = new Logic({
     storage: fakeStorageFactory(aliceFakeStore),
-    channels,
+    contract,
     web3,
   })
 
   const bob = new Logic({
     storage: fakeStorageFactory(bobFakeStore),
-    channels,
+    contract,
     web3,
   })
 
