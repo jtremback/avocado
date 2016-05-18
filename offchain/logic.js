@@ -48,7 +48,15 @@ export class Logic {
     return proposedChannels[channelId]
   }
   
-  
+  // Get the channel from the blockchain, update the local,
+  // and return it
+  async getChannel (channelId) {
+    Bytes32(channelId)
+    const savedChannel = await this.channels.getChannel.call(
+      channelId
+    )
+    return savedChannel
+  }  
   
   // Propose a new channel and send to counterparty
   async proposeChannel (params) {
