@@ -4,7 +4,7 @@ import p from 'es6-promisify'
 import bn2s from 'bignumber-to-string'
 
 
-test('setup', async t => {
+test('happy path', async t => {
   const idOne = '0x0000000000000000000000000000000000000000000000000000000000000001'
   const snapshots = {}
   const {alice, bob, accounts, web3} = await setup()
@@ -79,6 +79,19 @@ test('setup', async t => {
       phase: '0',
       sequenceNumber: '1',
       state: '0x3333'
+    })
+  })
+  
+  test('start challenge period', async t => {
+    await alice.startChallengePeriod(idOne)
+    t.deepEqual(bn2s(await alice.getChannel(idOne)), {
+      address0: '0x5c44c7de2dc4177d94d831e213fc7c17e8a4d0d8',
+      address1: '0x314092f83a2a3be9b04d6fd1e9c4ecd8caae32ff',
+      phase: '1',
+      challengePeriod: '1',
+      closingBlock: String((await p(web3.eth.getBlock)('latest')).number + 1),
+      state: '0x3333',
+      sequenceNumber: '1'
     })
   })
 })

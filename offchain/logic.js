@@ -296,8 +296,7 @@ export class Logic {
   async postLastUpdate (channelId) {
     Bytes32(channelId)
     
-    const channels = this.storage.getItem('channels')
-    const channel = channels[channelId]
+    const channel = this.storage.getItem('channels')[channelId]
     const update = channel.acceptedUpdates[channel.acceptedUpdates.length - 1]
 
     await this.channels.updateState(
@@ -315,7 +314,8 @@ export class Logic {
   async startChallengePeriod (channelId) {
     Bytes32(channelId)
     
-    const channel = this.storage.getItem('channels' + channelId)
+    const channel = this.storage.getItem('channels')[channelId]
+    
     const fingerprint = this.solSha3(
       'startChallengePeriod',
       channelId
@@ -328,9 +328,11 @@ export class Logic {
     
     await this.channels.startChallengePeriod(
       channelId,
-      signature
+      signature,
+      channel['address' + channel.me]
     )
   }
+  
 
 
 
