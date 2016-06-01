@@ -1,4 +1,7 @@
 # Avocado
+
+Run `npm run watch_offchain_tests` to test the entire code.
+
 ## Ethereum State Channels
 
 The ethereum blockchain must do a few things with a state channel. 
