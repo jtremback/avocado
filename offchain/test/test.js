@@ -23,14 +23,14 @@ test('happy path', async t => {
     })
 
     await bob.acceptProposedChannel(idOne)
-    t.deepEqual(bn2s(await bob.getBlockchainChannel(idOne)), {
-      address0: '0x5c44c7de2dc4177d94d831e213fc7c17e8a4d0d8',
-      address1: '0x314092f83a2a3be9b04d6fd1e9c4ecd8caae32ff',
-      challengePeriod: '1',
-      closingBlock: '0',
-      phase: '0',
-      sequenceNumber: '0',
-      state: '0x11'
+    t.deepEqual(bn2s(await bob.getBlockchainChannel(idOne)), {  
+      address0:'0x7d3f760e02168e26b33029d72951f2116f42720f',
+      address1:'0xbd926d9a9b6ee60f79a12f051d224a1bcba6070a',
+      challengePeriod:'1',
+      closingBlock:'0',
+      phase:'0',
+      sequenceNumber:'0',
+      state:'0x11'
     })
   })
 
@@ -46,8 +46,8 @@ test('happy path', async t => {
       channelId: '0x0000000000000000000000000000000000000000000000000000000000000001',
       sequenceNumber: 1,
       state: '0x3333',
-      signature0: '0x31d775d3c48d650fe1e015b7462f5273e97a653dbfd326bea8467bd2a490e6363c08c836c762062964928d9c7a6d4c432eacc8c1b02a62b5d432697dab43b92a1b',
-      signature1: '0x8f1064162fbea3da3b8396de5bef1fb31d91436db68b28bd4f55312a9b93049e66949cf273061fa23fa330c851a6189f2556ec8346a69c37b5ecc20a281297c61c'
+      signature0: '0xb834aee7dec23070a03a202ab74c44f7f38dccd688059c4982981ca9ffdca1c732666f9c17f914f65602e0e5097c7f8f338bf7d62551e0c92b3eaa8033c284391b',
+      signature1: '0xe588a2561d213c106d7fa7defc81280b87f8fddd2812e77d68f62aab079dbca228e87a59b617e93623ab34cfa2c1b6eabf83d98fa176b3086d26cfdcfd2f945a1b'
     }
     
     t.deepEqual(
@@ -72,8 +72,8 @@ test('happy path', async t => {
     await alice.postLastUpdate(idOne)
     
     t.deepEqual(bn2s(await alice.getBlockchainChannel(idOne)), {
-      address0: '0x5c44c7de2dc4177d94d831e213fc7c17e8a4d0d8',
-      address1: '0x314092f83a2a3be9b04d6fd1e9c4ecd8caae32ff',
+      address0:'0x7d3f760e02168e26b33029d72951f2116f42720f',
+      address1:'0xbd926d9a9b6ee60f79a12f051d224a1bcba6070a',
       challengePeriod: '1',
       closingBlock: '0',
       phase: '0',
@@ -85,8 +85,8 @@ test('happy path', async t => {
   test('start challenge period', async t => {
     await alice.startChallengePeriod(idOne)
     t.deepEqual(bn2s(await alice.getBlockchainChannel(idOne)), {
-      address0: '0x5c44c7de2dc4177d94d831e213fc7c17e8a4d0d8',
-      address1: '0x314092f83a2a3be9b04d6fd1e9c4ecd8caae32ff',
+      address0:'0x7d3f760e02168e26b33029d72951f2116f42720f',
+      address1:'0xbd926d9a9b6ee60f79a12f051d224a1bcba6070a',
       phase: '1',
       challengePeriod: '1',
       closingBlock: String((await p(web3.eth.getBlock)('latest')).number + 1),
@@ -99,6 +99,11 @@ test('happy path', async t => {
     await alice.tryClose(idOne) // Do it twice to advance blockchain state
     await alice.tryClose(idOne)
     t.equal(bn2s(await alice.getBlockchainChannel(idOne)).phase, '2')
+  })
+  
+  test('exit', t => {
+    t.end()
+    process.exit(0)
   })
 })
 

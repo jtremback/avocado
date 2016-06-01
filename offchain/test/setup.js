@@ -2,8 +2,14 @@ import { Logic } from '../logic.js'
 import Web3 from 'web3'
 import Pudding from 'ether-pudding'
 import p from 'es6-promisify'
+import TestRPC from 'ethereumjs-testrpc'
 
 export default async function () {
+  const server = TestRPC.server({
+    mnemonic: 'elegant ability lawn fiscal fossil general swarm trap bind require exchange ostrich'
+  })
+  const bchain = await p(server.listen)(8545);
+  
   const web3 = new Web3()
   web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
   
