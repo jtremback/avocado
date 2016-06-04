@@ -9,11 +9,11 @@ function checkSuccess (res) {
   if (!res) {
     throw new Error('no response')
   }
-  
+
   if (res.error) {
     throw '(peer error) ' + res.error
   }
-  
+
   if (!res.success) {
     throw new Error('peer returned unexpected value')
   }
@@ -32,22 +32,22 @@ export class Logic {
     this.web3 = web3
     this.post = post
   }
-  
-  
-  
+
+
+
   // View proposed channels
   async viewProposedChannels () {
     return this.storage.getItem('proposedChannels')
   }
-  
-  
-  
+
+
+
   // View one proposed channel
   async viewProposedChannel (channelId) {
     const proposedChannels = this.storage.getItem('proposedChannels')
     return proposedChannels[channelId]
   }
-  
+
   // Get the channel from the blockchain, update the local,
   // and return it
   async getBlockchainChannel (channelId) {
@@ -55,7 +55,7 @@ export class Logic {
     const channel = await this.contract.getChannel.call(
       channelId
     )
-    
+
     return {
       address0: channel[0],
       address1: channel[1],
@@ -65,8 +65,8 @@ export class Logic {
       state: channel[5],
       sequenceNumber: channel[6],
     }
-  }  
-  
+  }
+
   // Propose a new channel and send to counterparty
   async proposeChannel (params) {
     const counterpartyUrl = t.String(params.counterpartyUrl)
@@ -75,7 +75,7 @@ export class Logic {
     const address1 = Address(params.counterpartyAddress)
     const state = Hex(params.state)
     const challengePeriod = t.Number(params.challengePeriod)
-    
+
     const fingerprint = this.solSha3(
       'newChannel',
       channelId,
@@ -132,7 +132,7 @@ export class Logic {
   // Get a channel from the proposed channel list and accept it
   async acceptProposedChannel (channelId) {
     const channel = this.storage.getItem('proposedChannels')[channelId]
-    
+
     if (!channel) {
       throw new Error('no channel with that id')
     }
@@ -158,7 +158,7 @@ export class Logic {
       channel.signature0,
       signature1
     )
-    
+
     this.storeChannel({
       ...channel,
       me: 1,
@@ -176,20 +176,20 @@ export class Logic {
     const state = Hex(params.state)
 
     const channel = this.storage.getItem('channels')[channelId]
-    
+
     if (!channel) {
       throw new Error('cannot find channel')
     }
-    
+
     const sequenceNumber = highestProposedSequenceNumber(channel) + 1
-    
+
     const fingerprint = this.solSha3(
       'updateState',
       channelId,
       sequenceNumber,
       state
     )
-    
+
     const signature = await p(this.web3.eth.sign)(
       channel['address' + channel.me],
       fingerprint
@@ -205,11 +205,11 @@ export class Logic {
 
     channel.myProposedUpdates.push(update)
     this.storeChannel(channel)
-    
+
     checkSuccess(await this.post(channel.counterpartyUrl + '/add_proposed_update', update))
   }
-  
-  
+
+
 
   // Called by the counterparty over the http api, gets verified and
   // added to the proposed update list
@@ -222,20 +222,20 @@ export class Logic {
     if (update.sequenceNumber <= highestProposedSequenceNumber(channel)) {
       throw new Error('sequenceNumber too low')
     }
-    
+
     channel.theirProposedUpdates.push(update)
-    
+
     this.storeChannel(channel)
-    
+
     return { success: true }
   }
 
-  
+
 
   // Sign the update and send it back to the counterparty
   async acceptUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
-    
+
     const fingerprint = await this.verifyUpdate({
       channel,
       update
@@ -247,46 +247,46 @@ export class Logic {
     )
 
     update['signature' + channel.me] = signature
-    
+
     channel.acceptedUpdates.push(update)
-    
+
     this.storeChannel(channel)
-    
+
     await this.post(channel.counterpartyUrl + '/add_accepted_update', update)
   }
 
 
-  // Accepts last update from theirProposedUpdates 
+  // Accepts last update from theirProposedUpdates
   async acceptLastUpdate (channelId) {
     const channel = this.storage.getItem('channels')[channelId]
     const lastUpdate = channel.theirProposedUpdates[
       channel.theirProposedUpdates.length - 1
     ]
-    
+
     await this.acceptUpdate(lastUpdate)
   }
-  
+
 
 
   // Called by the counterparty over the http api, gets verified and
   // added to the accepted update list
   async addAcceptedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
-    
+
     await this.verifyUpdate({
       channel,
       update,
       checkMySignature: true
     })
 
-    
+
 
     if (update.sequenceNumber <= highestAcceptedSequenceNumber(channel)) {
       throw new Error('sequenceNumber too low')
     }
-    
+
     channel.acceptedUpdates.push(update)
-    
+
     this.storeChannel(channel)
   }
 
@@ -295,7 +295,7 @@ export class Logic {
   // Post last accepted update to the blockchain
   async postLastUpdate (channelId) {
     Bytes32(channelId)
-    
+
     const channel = this.storage.getItem('channels')[channelId]
     const update = channel.acceptedUpdates[channel.acceptedUpdates.length - 1]
 
@@ -313,19 +313,19 @@ export class Logic {
   // Start the challenge period, putting channel closing into motion
   async startChallengePeriod (channelId) {
     Bytes32(channelId)
-    
+
     const channel = this.storage.getItem('channels')[channelId]
-    
+
     const fingerprint = this.solSha3(
       'startChallengePeriod',
       channelId
     )
-    
+
     const signature = await p(this.web3.eth.sign)(
       channel['address' + channel.me],
       fingerprint
     )
-    
+
     await this.contract.startChallengePeriod(
       channelId,
       signature,
@@ -335,21 +335,21 @@ export class Logic {
 
   async tryClose (channelId) {
     Bytes32(channelId)
-    
+
     const channel = this.storage.getItem('channels')[channelId]
-    
+
     await this.contract.tryClose(channelId)
   }
 
-  // Gets the channels list, adds the channel, saves the channels list 
+  // Gets the channels list, adds the channel, saves the channels list
   storeChannel (channel) {
     const channels = this.storage.getItem('channels') || {}
     channels[channel.channelId] = channel
     this.storage.setItem('channels', channels)
   }
-  
-  
-  
+
+
+
   // This checks that the signature is valid
   async verifyChannel(channel) {
     const channelId = Bytes32(channel.channelId)
@@ -373,7 +373,7 @@ export class Logic {
       signature0,
       address0
     )
-    
+
     if (!valid) {
       throw new Error('signature0 invalid')
     }
@@ -389,9 +389,9 @@ export class Logic {
     const channelId = Bytes32(update.channelId)
     const state = Hex(update.state)
     const sequenceNumber = t.Number(update.sequenceNumber)
-    
+
     t.maybe(t.Boolean)(checkMySignature)
-    
+
     const fingerprint = this.solSha3(
       'updateState',
       channelId,
@@ -440,7 +440,7 @@ export class Logic {
       if (typeof arg === 'number') {
         return leftPad((arg).toString(16), 64, 0)
       }
-      
+
       else {
         return ''
       }
@@ -462,20 +462,20 @@ function highestAcceptedSequenceNumber (channel) {
 }
 
 function highestProposedSequenceNumber (channel) {
-  const myHighestSequenceNumber = 
-  channel.myProposedUpdates.length > 0 ?   
+  const myHighestSequenceNumber =
+  channel.myProposedUpdates.length > 0 ?
     channel.myProposedUpdates[
       channel.myProposedUpdates.length - 1
     ].sequenceNumber
   : 0
-  
-  const theirHighestSequenceNumber = 
-  channel.theirProposedUpdates.length > 0 ?   
+
+  const theirHighestSequenceNumber =
+  channel.theirProposedUpdates.length > 0 ?
     channel.theirProposedUpdates[
       channel.theirProposedUpdates.length - 1
     ].sequenceNumber
   : 0
-  
+
   return Math.max(
     myHighestSequenceNumber,
     theirHighestSequenceNumber
