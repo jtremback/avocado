@@ -12,6 +12,8 @@ test('happy path', async t => {
   snapshots.clean = await p(snapshot)(web3.currentProvider)
 
   test('create channel', async t => {
+    console.log(1)
+    console.log(alice.proposeChannel.toString())
     await alice.proposeChannel({
       myAddress: accounts[0],
       counterpartyAddress: accounts[1],
@@ -22,8 +24,9 @@ test('happy path', async t => {
       challengePeriod: 1
     })
 
+    console.log(2)
     await bob.acceptProposedChannel(idOne)
-    t.deepEqual(bn2s(await bob.getBlockchainChannel(idOne)), {  
+    t.deepEqual(bn2s(await bob.getBlockchainChannel(idOne)), {
       address0:'0x7d3f760e02168e26b33029d72951f2116f42720f',
       address1:'0xbd926d9a9b6ee60f79a12f051d224a1bcba6070a',
       challengePeriod:'1',
@@ -39,9 +42,9 @@ test('happy path', async t => {
       channelId: idOne,
       state: '0x3333'
     })
-    
+
     await bob.acceptLastUpdate(idOne)
-    
+
     const expectedUpdate = {
       channelId: '0x0000000000000000000000000000000000000000000000000000000000000001',
       sequenceNumber: 1,
@@ -49,7 +52,7 @@ test('happy path', async t => {
       signature0: '0xb834aee7dec23070a03a202ab74c44f7f38dccd688059c4982981ca9ffdca1c732666f9c17f914f65602e0e5097c7f8f338bf7d62551e0c92b3eaa8033c284391b',
       signature1: '0xe588a2561d213c106d7fa7defc81280b87f8fddd2812e77d68f62aab079dbca228e87a59b617e93623ab34cfa2c1b6eabf83d98fa176b3086d26cfdcfd2f945a1b'
     }
-    
+
     t.deepEqual(
       bob.fakeStore.channels[idOne].acceptedUpdates[0],
       expectedUpdate
@@ -67,10 +70,10 @@ test('happy path', async t => {
       expectedUpdate
     )
   })
-  
+
   test('post update to blockchain', async t => {
     await alice.postLastUpdate(idOne)
-    
+
     t.deepEqual(bn2s(await alice.getBlockchainChannel(idOne)), {
       address0:'0x7d3f760e02168e26b33029d72951f2116f42720f',
       address1:'0xbd926d9a9b6ee60f79a12f051d224a1bcba6070a',
@@ -81,7 +84,7 @@ test('happy path', async t => {
       state: '0x3333'
     })
   })
-  
+
   test('start challenge period', async t => {
     await alice.startChallengePeriod(idOne)
     t.deepEqual(bn2s(await alice.getBlockchainChannel(idOne)), {
@@ -94,13 +97,13 @@ test('happy path', async t => {
       sequenceNumber: '1'
     })
   })
-  
+
   test('try close', async t => {
     await alice.tryClose(idOne) // Do it twice to advance blockchain state
     await alice.tryClose(idOne)
     t.equal(bn2s(await alice.getBlockchainChannel(idOne)).phase, '2')
   })
-  
+
   test('exit', t => {
     t.end()
     process.exit(0)
