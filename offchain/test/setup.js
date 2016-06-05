@@ -51,7 +51,20 @@ export default async function () {
   var StateChannels = web3.eth.contract(abi)
 
   // const contract = await p(skipCb(StateChannels.new.bind(StateChannels), {}))()
+
   const contract = await p(skipCb(apply(StateChannels, 'new'), {}))()
+
+  const fingerprint = '0xae97c0db30be29a74be83832391086d45b8f248bdb80ae1f08b341ea99456825'
+  const sig0 = '0xe0fd23992016b9df30513f1b73c611c07f9ada814d37ca8b045904331126edd362d29574b1a2d7308ddc76d0a025543f7759fad9d96c2d65a65d324d310587c51c'
+  const addr0 = '0x7d3f760e02168e26b33029d72951f2116f42720f'
+
+  const valid = await p(contract.ecverify.call)(
+    fingerprint,
+    sig0,
+    addr0
+  )
+
+  console.log(valid)
 
   const aliceFakeStore = {}
   const bobFakeStore = {}
