@@ -42,9 +42,16 @@ export default async function () {
     }
   }
 
+  function apply (obj, method) {
+    return function (...args) {
+      return obj[method](...args)
+    }
+  }
+
   var StateChannels = web3.eth.contract(abi)
 
-  const contract = await p(skipCb(StateChannels.new.bind(StateChannels), {}))()
+  // const contract = await p(skipCb(StateChannels.new.bind(StateChannels), {}))()
+  const contract = await p(skipCb(apply(StateChannels, 'new'), {}))()
 
   const aliceFakeStore = {}
   const bobFakeStore = {}
@@ -70,6 +77,10 @@ export default async function () {
   function fakePostFactory (apis, calls, myUrl) {
     return async function post (url, body) {
       const [ who, method ] = url.split('/')
+      console.log('posting (setup.js)')
+      console.log(body)
+      console.log(who, method)
+      console.log(apis[who][calls['/' + method]])
 
       try {
         return await apis[who][calls['/' + method]](body, myUrl)

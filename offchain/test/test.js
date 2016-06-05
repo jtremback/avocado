@@ -13,7 +13,6 @@ test('happy path', async t => {
 
   test('create channel', async t => {
     console.log(1)
-    console.log(alice.proposeChannel.toString())
     await alice.proposeChannel({
       myAddress: accounts[0],
       counterpartyAddress: accounts[1],

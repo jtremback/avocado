@@ -87,14 +87,31 @@ export class Logic {
 
     const signature0 = await p(this.web3.eth.sign)(address0, fingerprint)
 
-    checkSuccess(await this.post(counterpartyUrl + '/add_proposed_channel', {
+    console.log('signed')
+
+    // I believe that the difference between web3+bind and Pudding is in part
+    // to make this.post or other this.methods bound to the wrong object
+    // The OG version has most functions unbound, while this version binds them
+    //
+    // proposeChannel's code is identical in both cases, and so are params
+    // *this* is alice, and this.post is alice.post as created by setup
+    //
+    // this.post doesn't complete. Why not?
+
+    let result = await this.post(counterpartyUrl + '/add_proposed_channel', {
       channelId,
       address0,
       address1,
       state,
       challengePeriod,
       signature0
-    }))
+    })
+
+    console.log(result)
+
+    checkSuccess(result)
+
+    console.log('signing checked')
 
     this.storeChannel({
       channelId,
@@ -116,9 +133,11 @@ export class Logic {
   // Called by the counterparty over the http api, gets added to the
   // proposed channel list
   async addProposedChannel (channel, counterpartyUrl) {
-    t.String(counterpartyUrl)
+    console.log('addProposedChannel logic.js')
     await this.verifyChannel(channel)
     channel.counterpartyUrl = counterpartyUrl
+
+    console.log('channel verified')
 
     let proposedChannels = this.storage.getItem('proposedChannels') || {}
     proposedChannels[channel.channelId] = channel
@@ -359,6 +378,8 @@ export class Logic {
     const challengePeriod = t.Number(channel.challengePeriod)
     const signature0 = Hex(channel.signature0)
 
+    console.log('verifyChannel logic.js')
+
     const fingerprint = this.solSha3(
       'newChannel',
       channelId,
@@ -368,11 +389,40 @@ export class Logic {
       challengePeriod
     )
 
-    const valid = await this.contract.ecverify.call(
+    console.log('fingerprint calculated')
+
+    // TODO TODO TODO
+    // this is the problem. ecverify method isn't working. Also note that
+    // ecverify is [Function: bound] here vs. [Function] in master...
+    // using contract.ecverify without .call doesn't work
+    // rebinding null via contract.ecverify.bind(null) doesn't work
+
+    console.log(fingerprint)
+    console.log(signature0)
+    console.log(address0)
+
+    const valid = await p(this.contract.ecverify.call)(
       fingerprint,
       signature0,
       address0
     )
+
+    /*
+    let valid
+
+    try {
+      valid = await p(this.contract.ecverify.call)(
+        fingerprint,
+        signature0,
+        address0
+      )
+    } catch (err) {
+      console.log('ERROR')
+      console.log(err)
+    }*/
+
+    console.log('validity computed')
+    console.log(valid)
 
     if (!valid) {
       throw new Error('signature0 invalid')
