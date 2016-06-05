@@ -1,8 +1,10 @@
 import { Logic } from '../logic.js'
+import fs from 'fs'
 import Web3 from 'web3'
 import Pudding from 'ether-pudding'
 import p from 'es6-promisify'
 import TestRPC from 'ethereumjs-testrpc'
+import solc from 'solc'
 
 export default async function () {
   const server = TestRPC.server({
@@ -11,14 +13,39 @@ export default async function () {
   const bchain = await p(server.listen)(8545);
   
   const web3 = new Web3()
-  web3.setProvider(new Web3.providers.HttpProvider('http://localhost:8545'))
+  const provider = new Web3.providers.HttpProvider('http://localhost:8545')
+  web3.setProvider(provider)
   
   const accounts = await p(web3.eth.getAccounts)()
   web3.eth.defaultAccount = accounts[0]
   
-  Pudding.setWeb3(web3)
-  const StateChannels = require('../../environments/test/contracts/StateChannels.sol.js')
-  StateChannels.load(Pudding)
+  // Ameen's compilation code
+  const BASE_PATH = __dirname + '/../../contracts/'
+
+  function readContract(path) {
+    return fs.readFileSync(BASE_PATH + path).toString()
+  }
+
+  const input = {
+    'ECVerify.sol': readContract('ECVerify.sol'),
+    'StateChannels.sol': readContract('StateChannels.sol')
+  }
+
+  const output = solc.compile({ sources: input }, 1)
+  if (output.errors) { throw new Error(output.errors) }
+
+  // Pudding
+
+  await Pudding.save({
+    abi: JSON.parse(output.contracts['StateChannels'].interface),
+    binary: output.contracts['StateChannels'].bytecode
+  }, BASE_PATH + './MyContract.sol.js')
+  
+  // We just save it and then require it. Nice.
+  
+  const StateChannels = require(BASE_PATH + './MyContract.sol.js')
+  StateChannels.setProvider(provider)
+  // StateChannels.load(Pudding)
   const contract = await StateChannels.new()
 
   const aliceFakeStore = {}
