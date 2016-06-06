@@ -1,3 +1,5 @@
+// TODO: refactor away from truffle format
+
 /*global StateChannels web3 Uint8Array*/
 import sha3 from 'js-sha3'
 import leftPad from 'left-pad'

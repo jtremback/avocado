@@ -18,7 +18,6 @@
     "node-localstorage": "^1.3.0",
     "solc": "^0.3.4",
     "tcomb": "^3.0.0",
-    "truffle": "jtremback/truffle#babel-polyfill",
     "web3": "^0.15.3"
   },
   "devDependencies": {
@@ -35,11 +34,7 @@
     "nodemon": "^1.9.2"
   },
   "scripts": {
-    "debug": "forever -c \"node --debug-brk\" ./offchain/index.js",
-    "testrpc": "testrpc",
     "test": "truffle test ./test/stateChannels.js",
-    "watch_offchain": "nodemon ./offchain/index.js",
-    "watch_offchain_tests": "nodemon ./offchain/test/loader.js",
     "offchain_tests": "node ./offchain/test/loader.js"
   },
   "author": "jehan.tremback@gmail.com",

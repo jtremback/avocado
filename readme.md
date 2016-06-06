@@ -1,6 +1,6 @@
 # Avocado
 
-Run `npm run watch_offchain_tests` to test the integration of contract and offchain code.
+Run `npm run offchain_tests` to test the integration of contract and offchain code.
 
 ## Ethereum State Channels
 
