@@ -43,11 +43,11 @@ export default async function () {
 
   
   
-  // 
+  // MAKE WEB3
   const web3 = new Web3()
   web3.setProvider(new Web3.providers.HttpProvider('http://localhost:' + TESTRPC_PORT))
   const accounts = await p(web3.eth.getAccounts)()
-  // web3.eth.defaultAccount = accounts[0]
+  web3.eth.defaultAccount = accounts[0]
   
 
 
