@@ -34,7 +34,7 @@
     "nodemon": "^1.9.2"
   },
   "scripts": {
-    "test": "truffle test ./test/stateChannels.js",
+    "test": "node ./test/loader.js",
     "offchain_tests": "node ./offchain/test/loader.js"
   },
   "author": "jehan.tremback@gmail.com",

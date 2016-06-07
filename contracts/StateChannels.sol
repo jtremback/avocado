@@ -1,12 +1,12 @@
 import "ECVerify.sol";
 
-contract StateChannels is ECVerify {    
+contract StateChannels is ECVerify {
     uint8 constant PHASE_OPEN = 0;
     uint8 constant PHASE_CHALLENGE = 1;
     uint8 constant PHASE_CLOSED = 2;
-    
+
     mapping (bytes32 => Channel) channels;
-    
+
     struct Channel {
         bytes32 channelId;
         address address0;
@@ -17,7 +17,7 @@ contract StateChannels is ECVerify {
         bytes state;
         uint sequenceNumber;
     }
-    
+
     function getChannel(bytes32 channelId) returns(
         address address0,
         address address1,
@@ -41,7 +41,7 @@ contract StateChannels is ECVerify {
     event LogBytes(string label, bytes message);
     event LogBytes32(string label, bytes32 message);
     event LogNum256(uint256 num);
-    
+
     function newChannel(
         bytes32 channelId,
         address address0,
@@ -50,12 +50,12 @@ contract StateChannels is ECVerify {
         uint256 challengePeriod,
         bytes signature0,
         bytes signature1
-    ) { 
+    ) {
         if (channels[channelId].channelId == channelId) {
             Error("channel with that channelId already exists");
             return;
         }
-        
+
         bytes32 fingerprint = sha3(
             'newChannel',
             channelId,
@@ -64,17 +64,17 @@ contract StateChannels is ECVerify {
             state,
             challengePeriod
         );
-        
+
         if (!ecverify(fingerprint, signature0, address0)) {
             Error("signature0 invalid");
             return;
         }
-        
+
         if (!ecverify(fingerprint, signature1, address1)) {
             Error("signature1 invalid");
             return;
         }
-        
+
         Channel memory channel = Channel(
             channelId,
             address0,
@@ -85,10 +85,10 @@ contract StateChannels is ECVerify {
             state,
             0
         );
-        
+
         channels[channelId] = channel;
     }
-    
+
     function updateState(
         bytes32 channelId,
         uint256 sequenceNumber,
@@ -97,24 +97,24 @@ contract StateChannels is ECVerify {
         bytes signature1
     ) {
         tryClose(channelId);
-        
+
         if (channels[channelId].phase == PHASE_CLOSED) {
             Error("channel closed");
             return;
         }
-        
+
         bytes32 fingerprint = sha3(
             'updateState',
             channelId,
             sequenceNumber,
             state
         );
-        
+
         if (!ecverify(fingerprint, signature0, channels[channelId].address0)) {
             Error("signature0 invalid");
             return;
         }
-        
+
         if (!ecverify(fingerprint, signature1, channels[channelId].address1)) {
             Error("signature1 invalid");
             return;
@@ -124,11 +124,11 @@ contract StateChannels is ECVerify {
             Error("sequence number too low");
             return;
         }
-        
+
         channels[channelId].state = state;
         channels[channelId].sequenceNumber = sequenceNumber;
     }
-    
+
     function startChallengePeriod(
         bytes32 channelId,
         bytes signature,
@@ -138,12 +138,12 @@ contract StateChannels is ECVerify {
             Error("channel not open");
             return;
         }
-        
+
         bytes32 fingerprint = sha3(
             'startChallengePeriod',
             channelId
         );
-        
+
         if (signer == channels[channelId].address0) {
             if (!ecverify(fingerprint, signature, channels[channelId].address0)) {
                 Error("signature invalid");
@@ -162,7 +162,7 @@ contract StateChannels is ECVerify {
         channels[channelId].closingBlock = block.number + channels[channelId].challengePeriod;
         channels[channelId].phase = PHASE_CHALLENGE;
     }
-    
+
     function tryClose(
         bytes32 channelId
     ) {

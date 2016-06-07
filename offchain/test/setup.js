@@ -26,7 +26,6 @@ export default async function () {
     abi: JSON.parse(output.contracts['StateChannels'].interface),
     binary: output.contracts['StateChannels'].bytecode
   }, PUDDING_PATH + './StateChannels.sol.js')
-  
 
 
   // START TESTRPC
@@ -43,8 +42,7 @@ export default async function () {
   web3.eth.defaultAccount = accounts[0]
 
 
-
-  // INSTANTIATE PUDDING CONTRACT ABSTRACTION  
+  // INSTANTIATE PUDDING CONTRACT ABSTRACTION
   const StateChannels = require(PUDDING_PATH + './StateChannels.sol.js')
   StateChannels.setProvider(new Web3.providers.HttpProvider('http://localhost:' + TESTRPC_PORT))
   const contract = await StateChannels.new()
@@ -60,7 +58,7 @@ export default async function () {
       getItem(key) {
         return obj[key]
       },
-      
+
       setItem(key, item) {
         obj[key] = item
       }
@@ -72,11 +70,11 @@ export default async function () {
     '/add_proposed_update': 'addProposedUpdate',
     '/add_accepted_update': 'addAcceptedUpdate',
   }
-  
+
   function fakePostFactory (apis, calls, myUrl) {
     return async function post (url, body) {
       const [ who, method ] = url.split('/')
-      
+
       try {
         return await apis[who][calls['/' + method]](body, myUrl)
       } catch (error) {
