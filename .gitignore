@@ -4,3 +4,5 @@
 *.vscode*
 *debug.test*
 data
+
+.node-xmlhttprequest-sync-*
