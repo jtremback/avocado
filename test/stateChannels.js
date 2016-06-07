@@ -170,8 +170,8 @@ test('StateChannels', async t => {
         )
 
         // Wrong account
-        const sig0 = p(web3.eth.sign.bind(web3))(accounts[2], fingerprint)
-        const sig1 = p(web3.eth.sign.bind(web3))(accounts[1], fingerprint)
+        const sig0 = p(web3.eth.sign)(accounts[2], fingerprint)
+        const sig1 = p(web3.eth.sign)(accounts[1], fingerprint)
 
         await contract.newChannel(
             channelId,
@@ -190,50 +190,43 @@ test('StateChannels', async t => {
     });
 
 
-    test('exit', t => {
-        t.end()
-        process.exit(0)
-    })
-  })
-
-  /*
-contract('StateChannels', function (accounts) {
-
-
-    it('rejects channel with non-valid signature1', mochaAsync(async () => {
-        const meta = StateChannels.deployed()
-        const errLog = meta.Error()
+    test('rejects channel with non-valid signature1', async t => {
+        const errLog = contract.Error([{ code: 1 }])
         const challengePeriod = 1
         const channelId = '0x3000000000000000000000000000000000000000000000000000000000000000'
         const state = '0x1111'
         const fingerprint = solSha3(
             'newChannel',
             channelId,
-            web3.eth.accounts[0],
-            web3.eth.accounts[1],
+            accounts[0],
+            accounts[1],
             state,
             challengePeriod
-        )
+        );
 
-        const sig0 = web3.eth.sign(web3.eth.accounts[0], fingerprint)
-        const sig1 = web3.eth.sign(web3.eth.accounts[2], fingerprint) // Wrong account
 
-        await meta.newChannel(
+        const sig0 = await p(web3.eth.sign)(accounts[0], fingerprint)
+        // Wrong account
+        const sig1 = await p(web3.eth.sign)(accounts[2], fingerprint)
+
+        await contract.newChannel(
             channelId,
-            web3.eth.accounts[0],
-            web3.eth.accounts[1],
+            accounts[0],
+            accounts[1],
             state,
             1,
             sig0,
             sig1
         )
-        const logs = await errLog.get()
 
-        assert.equal(logs[0].args.message, 'signature1 invalid', 'did not return error');
-    }));
+        const logs = await p(errLog.get.bind(errLog))()
 
-    it('update state', mochaAsync(async () => {
-        const meta = StateChannels.deployed()
+        t.equal(logs[0].args.message, 'signature1 invalid', 'did not return error');
+
+        errLog.stopWatching()
+    });
+
+    test('update state', async t => {
         const channelId = '0x1000000000000000000000000000000000000000000000000000000000000000'
         const state = '0x2222'
         const sequenceNumber = 1
@@ -244,10 +237,10 @@ contract('StateChannels', function (accounts) {
             state
         )
 
-        const sig0 = web3.eth.sign(web3.eth.accounts[0], fingerprint)
-        const sig1 = web3.eth.sign(web3.eth.accounts[1], fingerprint)
+        const sig0 = await p(web3.eth.sign)(accounts[0], fingerprint)
+        const sig1 = await p(web3.eth.sign)(accounts[1], fingerprint)
 
-        await meta.updateState(
+        await contract.updateState(
             channelId,
             sequenceNumber,
             state,
@@ -255,44 +248,46 @@ contract('StateChannels', function (accounts) {
             sig1
         )
 
-        const savedChannel = await meta.getChannel.call(
+        const savedChannel = await contract.getChannel.call(
             channelId
         )
 
-        assert.equal(savedChannel[5], state, 'state')
-        assert.equal(savedChannel[6].toString(10), '1', 'sequenceNumber')
-    }));
+        t.equal(savedChannel[5], state, 'state')
+        t.equal(savedChannel[6].toString(10), '1', 'sequenceNumber')
+    });
 
-    it('start challenge period', mochaAsync(async () => {
-        const meta = StateChannels.deployed()
+    test('start challenge period', async t => {
         const channelId = '0x1000000000000000000000000000000000000000000000000000000000000000'
         const fingerprint = solSha3(
             'startChallengePeriod',
             channelId
         )
 
-        const sig = web3.eth.sign(web3.eth.accounts[0], fingerprint)
+        const sig = await p(web3.eth.sign)(accounts[0], fingerprint)
 
-        await meta.startChallengePeriod(
+        await contract.startChallengePeriod(
             channelId,
             sig,
-            web3.eth.accounts[0]
+            accounts[0]
         )
 
-        const savedChannel = await meta.getChannel.call(
+        const savedChannel = await contract.getChannel.call(
             channelId
         )
 
-        assert.equal(savedChannel[0], web3.eth.accounts[0], 'addr0')
-        assert.equal(savedChannel[1], web3.eth.accounts[1], 'addr1')
-        assert.equal(savedChannel[2].toString(10), '1', 'phase')
-        assert.equal(savedChannel[3].toString(10), '1', 'challengePeriod')
-        assert.isAbove(savedChannel[4].toString(10), '1', 'closingBlock')
-        // assert.equal(savedChannel[5], state, 'state')
-        assert.equal(savedChannel[6].toString(10), '1', 'sequenceNumber')
-    }));
-});
-*/
+        t.equal(savedChannel[0], accounts[0], 'addr0')
+        t.equal(savedChannel[1], accounts[1], 'addr1')
+        t.equal(savedChannel[2].toString(10), '1', 'phase')
+        t.equal(savedChannel[3].toString(10), '1', 'challengePeriod')
+        t.ok(savedChannel[4].toString(10) > '1', 'closingBlock')
+        t.equal(savedChannel[6].toString(10), '1', 'sequenceNumber')
+    });
+
+    test('exit', t => {
+        t.end()
+        process.exit(0)
+    })
+})
 
 function byteToHexString(uint8arr) {
     if (!uint8arr) {
