@@ -34,6 +34,7 @@
     "nodemon": "^1.9.2"
   },
   "scripts": {
+    "start": "node offchain/loader.js",
     "test": "node ./test/loader.js",
     "offchain_tests": "node ./offchain/test/loader.js"
   },

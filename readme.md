@@ -1,5 +1,6 @@
 # Avocado
 
+Run `npm start` to start a state channel server. You need to interact with the state channel server by using cli.js.
 Run `npm run offchain_tests` to test the integration of contract and offchain code.
 
 ## Ethereum State Channels
