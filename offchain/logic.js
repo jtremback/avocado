@@ -33,7 +33,10 @@ export class Logic {
     this.post = post
   }
   
-  
+  // Test CLI
+  async testCli () {
+    return 'hello'
+  }
   
   // View proposed channels
   async viewProposedChannels () {
