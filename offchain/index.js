@@ -11,7 +11,7 @@ import request from 'request'
 import p from 'es6-promisify'
 import Web3 from 'web3'
 
-const PUDDING_PATH = __dirname + '/pudding/'
+const PUDDING_PATH = path.resolve(__dirname + '/../pudding/')
 
 const argv = minimist(process.argv.slice(2))
 const peerPort = argv.c || 4020
@@ -30,7 +30,7 @@ const web3Provider = argv.w || 'http://localhost:8545'
 
 
   // INSTANTIATE PUDDING CONTRACT ABSTRACTION
-  const StateChannels = require(PUDDING_PATH + './StateChannels.sol.js')
+  const StateChannels = require(PUDDING_PATH + '/StateChannels.sol.js')
   StateChannels.setProvider(new Web3.providers.HttpProvider(web3Provider))
   const contract = await StateChannels.new()
 
