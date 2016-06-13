@@ -31,13 +31,10 @@ export default async () => {
     return async function post (url, body) {
       const [ who, method ] = url.split('/')
 
+      body.counterpartyUrl = myUrl
+
       try {
-        console.log('setup.js -- fakePostFactory')
-        console.log(apis)
-        console.log(who)
-        console.log(apis[who][calls['/' + method]])
-        console.log(calls['/' + method])
-        return await apis[who][calls['/' + method]](body, myUrl)
+        return await apis[who][calls['/' + method]](body)
       } catch (error) {
         console.log(error)
         return { error: error.message }

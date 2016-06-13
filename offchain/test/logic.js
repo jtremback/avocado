@@ -32,25 +32,22 @@ test('happy path', async () => {
   })
 
   test('update channel', async t => {
-    console.log(0)
     await alice.proposeUpdate({
       channelId: idOne,
       state: '0x3333'
     })
 
-    console.log(1)
     await bob.acceptLastUpdate(idOne)
 
-    console.log(2)
     const expectedUpdate = {
       channelId: '0x0000000000000000000000000000000000000000000000000000000000000001',
+      counterpartyUrl: 'bob',
       sequenceNumber: 1,
       state: '0x3333',
       signature0: '0xb834aee7dec23070a03a202ab74c44f7f38dccd688059c4982981ca9ffdca1c732666f9c17f914f65602e0e5097c7f8f338bf7d62551e0c92b3eaa8033c284391b',
       signature1: '0xe588a2561d213c106d7fa7defc81280b87f8fddd2812e77d68f62aab079dbca228e87a59b617e93623ab34cfa2c1b6eabf83d98fa176b3086d26cfdcfd2f945a1b'
     }
 
-    console.log(3)
     t.deepEqual(
       bob.fakeStore.channels[idOne].acceptedUpdates[0],
       expectedUpdate
@@ -69,7 +66,6 @@ test('happy path', async () => {
     )
   })
 
-  /*
   test('post update to blockchain', async t => {
     await alice.postLastUpdate(idOne)
 
@@ -102,7 +98,6 @@ test('happy path', async () => {
     await alice.tryClose(idOne)
     t.equal(bn2s(await alice.getBlockchainChannel(idOne)).phase, '2')
   })
-  */
 
   test('exit', t => {
     t.end()

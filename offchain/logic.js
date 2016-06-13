@@ -73,8 +73,6 @@ export class Logic {
 
   // Propose a new channel and send to counterparty
   async proposeChannel (params) {
-    console.log('logic.js')
-    console.log(params)
     const counterpartyUrl = t.String(params.counterpartyUrl)
     const channelId = Bytes32(params.channelId)
     const address0 = Address(params.myAddress)
@@ -121,13 +119,11 @@ export class Logic {
 
   // Called by the counterparty over the http api, gets added to the
   // proposed channel list
-  async addProposedChannel (channel, counterpartyUrl) {
+  async addProposedChannel (channel) {
     console.log('logic.js -- addProposedChannel')
     console.log(channel)
-    console.log(counterpartyUrl)
-    t.String(counterpartyUrl)
+    t.String(channel.counterpartyUrl)
     await this.verifyChannel(channel)
-    channel.counterpartyUrl = counterpartyUrl
 
     let proposedChannels = this.storage.getItem('proposedChannels') || {}
     proposedChannels[channel.channelId] = channel
@@ -224,7 +220,7 @@ export class Logic {
 
   // Called by the counterparty over the http api, gets verified and
   // added to the proposed update list
-  async adProposedUpdate (update) {
+  async addProposedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
     await this.verifyUpdate({
       channel,
