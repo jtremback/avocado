@@ -5,7 +5,7 @@ import { Logic } from '../logic.js'
 export default function (globals) {
   let app = express()
   app.use(bodyParser.json())
-  
+
   const logic = new Logic(globals)
 
   function handlerFactory (method) {
@@ -21,7 +21,7 @@ export default function (globals) {
       })
     }
   }
-  
+
   app.post('/add_proposed_channel', handlerFactory('addProposedChannel'))
   app.post('/add_proposed_update', handlerFactory('addProposedUpdate'))
   app.post('/add_accepted_update', handlerFactory('addAcceptedUpdate'))
