@@ -4,51 +4,57 @@
 // -s contract address
 // -f storage location
 // -w web3 provider
-var argv = require('minimist')(process.argv.slice(2))
-var path = require('path')
-var request = require('request')
-var promisify = require('es6-promisify')
 
-var peerPort = argv.c || 4020
-var callerPort = argv.p || 3020
-var contractAddress = argv.s || '0xf8c138b08cb32391C7Ab8Edbda61E023943f72d7'
-var storageLocation = argv.f || path.join(__dirname, '../data/storage')
-var web3Provider = argv.w || 'http://localhost:8545'
+import minimist from 'minimist'
+import path from 'path'
+import request from 'request'
+import p from 'es6-promisify'
+import Web3 from 'web3'
 
-require('babel-register')
-require('babel-polyfill')
+const PUDDING_PATH = path.resolve(__dirname + '/../pudding/')
 
-var Web3 = require('web3')
-var web3 = new Web3()
-web3.setProvider(new Web3.providers.HttpProvider(web3Provider));
+const argv = minimist(process.argv.slice(2))
+const peerPort = argv.c || 4020
+const callerPort = argv.p || 3020
+const contractAddress = argv.s || '0xf8c138b08cb32391C7Ab8Edbda61E023943f72d7'
+const storageLocation = argv.f || path.join(__dirname, '../data/storage')
+const web3Provider = argv.w || 'http://localhost:8545'
 
-var Pudding = require('ether-pudding')
-Pudding.setWeb3(web3)
 
-var StateChannels = require('../environments/test/contracts/StateChannels.sol.js')
-StateChannels.load(Pudding)
-var channels = StateChannels.deployed()
+;(async () => {
+  // MAKE WEB3
+  const web3 = new Web3()
+  web3.setProvider(new Web3.providers.HttpProvider(web3Provider))
+  const accounts = await p(web3.eth.getAccounts)()
+  web3.eth.defaultAccount = accounts[0]
 
-var JSONStorage = require('node-localstorage').JSONStorage
-var storage = new JSONStorage(storageLocation)
 
-const post = promisify(function (url, body, callback) {
-  request.post({
-    url,
-    body,
-    json: true,
-  }, callback)
-})
+  // INSTANTIATE PUDDING CONTRACT ABSTRACTION
+  const StateChannels = require(PUDDING_PATH + '/StateChannels.sol.js')
+  StateChannels.setProvider(new Web3.providers.HttpProvider(web3Provider))
+  const contract = await StateChannels.new()
 
-var globals = {
-  storage,
-  channels,
-  web3,
-  post
-}
+  var JSONStorage = require('node-localstorage').JSONStorage
+  var storage = new JSONStorage(storageLocation)
 
-var caller = require('./servers/caller.js').default(globals)
-var peer = require('./servers/peer.js').default(globals)
+  const post = p(function (url, body, callback) {
+    request.post({
+      url,
+      body,
+      json: true,
+    }, callback)
+  })
 
-peer.listen(peerPort, () => console.log('peer api listening on ' + peerPort))
-caller.listen(callerPort, () => console.log('caller api listening on ' + callerPort))
+  var globals = {
+    storage,
+    contract,
+    web3,
+    post
+  }
+
+  var caller = require('./servers/caller.js').default(globals)
+  var peer = require('./servers/peer.js').default(globals)
+
+  peer.listen(peerPort, () => console.log('peer api listening on ' + peerPort))
+  caller.listen(callerPort, () => console.log('caller api listening on ' + callerPort))
+})().catch(err => console.error(err))
