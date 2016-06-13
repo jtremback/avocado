@@ -34,7 +34,9 @@ export class Logic {
   }
 
   // Test CLI
-  async testCli () {
+  async testCli (params) {
+    console.log('logic.js')
+    console.log(params)
     return 'hello'
   }
 
@@ -42,7 +44,6 @@ export class Logic {
   async viewProposedChannels () {
     return this.storage.getItem('proposedChannels')
   }
-
 
 
   // View one proposed channel
@@ -72,6 +73,8 @@ export class Logic {
 
   // Propose a new channel and send to counterparty
   async proposeChannel (params) {
+    console.log('logic.js')
+    console.log(params)
     const counterpartyUrl = t.String(params.counterpartyUrl)
     const channelId = Bytes32(params.channelId)
     const address0 = Address(params.myAddress)
@@ -119,6 +122,9 @@ export class Logic {
   // Called by the counterparty over the http api, gets added to the
   // proposed channel list
   async addProposedChannel (channel, counterpartyUrl) {
+    console.log('logic.js -- addProposedChannel')
+    console.log(channel)
+    console.log(counterpartyUrl)
     t.String(counterpartyUrl)
     await this.verifyChannel(channel)
     channel.counterpartyUrl = counterpartyUrl
@@ -209,6 +215,8 @@ export class Logic {
     channel.myProposedUpdates.push(update)
     this.storeChannel(channel)
 
+    console.log('LOGIC.js -- proposeUpdate')
+
     checkSuccess(await this.post(channel.counterpartyUrl + '/add_proposed_update', update))
   }
 
@@ -216,7 +224,7 @@ export class Logic {
 
   // Called by the counterparty over the http api, gets verified and
   // added to the proposed update list
-  async addProposedUpdate (update) {
+  async adProposedUpdate (update) {
     const channel = this.storage.getItem('channels')[update.channelId]
     await this.verifyUpdate({
       channel,

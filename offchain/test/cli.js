@@ -3,13 +3,13 @@ import setup from './setup.js'
 import p from 'es6-promisify'
 import bn2s from 'bignumber-to-string'
 
+// cant use the same setup. need to run index to start both the caller and peer
+// servers, then hit the cli methods to propose the channel, accept the
+// proposed channel, etc...
 
-test('happy path', async t => {
+test('happy path', async () => {
   const idOne = '0x0000000000000000000000000000000000000000000000000000000000000001'
-  const snapshots = {}
   const {alice, bob, accounts, web3} = await setup()
-
-  snapshots.clean = await p(snapshot)(web3.currentProvider)
 
   test('create channel', async t => {
     await alice.proposeChannel({
@@ -106,21 +106,3 @@ test('happy path', async t => {
     process.exit(0)
   })
 })
-
-function snapshot(provider, callback) {
-  provider.sendAsync({
-    method: 'evm_snapshot',
-    params: [],
-    jsonrpc: '2.0',
-    id: new Date().getTime()
-  }, callback)
-}
-
-function revert(provider, id, callback) {
-  provider.sendAsync({
-    method: 'evm_revert',
-    params: [id],
-    jsonrpc: '2.0',
-    id: new Date().getTime()
-  }, callback)
-}

@@ -32,6 +32,11 @@ export default async () => {
       const [ who, method ] = url.split('/')
 
       try {
+        console.log('setup.js -- fakePostFactory')
+        console.log(apis)
+        console.log(who)
+        console.log(apis[who][calls['/' + method]])
+        console.log(calls['/' + method])
         return await apis[who][calls['/' + method]](body, myUrl)
       } catch (error) {
         console.log(error)
