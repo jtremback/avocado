@@ -1,9 +1,0 @@
-
-
-{ myAddress: '0x7d3f760e02168e26b33029d72951f2116f42720f',
-  counterpartyAddress: '0xbd926d9a9b6ee60f79a12f051d224a1bcba6070a',
-  counterpartyUrl: 'bob',
-  myUrl: 'bob',
-  channelId: '0x0000000000000000000000000000000000000000000000000000000000000001',
-  state: '0x11',
-  challengePeriod: 1 }
