@@ -36,6 +36,7 @@
   "scripts": {
     "start": "node offchain/loader.js",
     "cli": "node offchain/cli.js",
+    "cli_tests": "node ./offchain/test/cli_loader.js",
     "test": "node ./test/loader.js",
     "offchain_tests": "node ./offchain/test/loader.js"
   },

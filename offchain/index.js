@@ -16,7 +16,8 @@ const PUDDING_PATH = path.resolve(__dirname + '/../pudding/')
 const argv = minimist(process.argv.slice(2))
 const peerPort = argv.p || 4020
 const callerPort = argv.c || 3020
-const contractAddress = argv.s || '0xf8c138b08cb32391C7Ab8Edbda61E023943f72d7'
+// TODO contractAddress not used
+// const contractAddress = argv.s || '0xf8c138b08cb32391C7Ab8Edbda61E023943f72d7'
 const storageLocation = argv.f || path.join(__dirname, '../data/storage')
 const web3Provider = argv.w || 'http://localhost:8545'
 
