@@ -14,7 +14,7 @@ function checkSuccess (res) {
     throw '(peer error) ' + res.error
   }
 
-  if (!res.success) {
+  if (!res.body || !res.body.success) {
     throw new Error('peer returned unexpected value')
   }
 }
@@ -34,9 +34,7 @@ export class Logic {
   }
 
   // Test CLI
-  async testCli (params) {
-    console.log('logic.js')
-    console.log(params)
+  async testCli () {
     return 'hello'
   }
 
@@ -116,12 +114,9 @@ export class Logic {
   }
 
 
-
   // Called by the counterparty over the http api, gets added to the
   // proposed channel list
   async addProposedChannel (channel) {
-    console.log('logic.js -- addProposedChannel')
-    console.log(channel)
     t.String(channel.counterpartyUrl)
     await this.verifyChannel(channel)
 
@@ -210,8 +205,6 @@ export class Logic {
 
     channel.myProposedUpdates.push(update)
     this.storeChannel(channel)
-
-    console.log('LOGIC.js -- proposeUpdate')
 
     checkSuccess(await this.post(channel.counterpartyUrl + '/add_proposed_update', update))
   }
@@ -342,9 +335,6 @@ export class Logic {
 
   async tryClose (channelId) {
     Bytes32(channelId)
-
-    // TODO is this useless?
-    // const channel = this.storage.getItem('channels')[channelId]
 
     await this.contract.tryClose(channelId)
   }

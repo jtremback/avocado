@@ -11,9 +11,6 @@ var argv = require('minimist')(process.argv.slice(2), {
   ]
 })
 
-console.log('cli')
-console.log(argv)
-
 var avocadoProvider = argv.a || 'http://localhost:3020'
 var request = require('request')
 
@@ -24,9 +21,6 @@ post(avocadoProvider + '/' + argv._[0], argv, function (err, res, body) {
 })
 
 function post(url, body, callback) {
-  console.log('cli.js')
-  console.log(url)
-  console.log(body)
   request.post({
     url,
     body,

@@ -13,7 +13,7 @@ test('happy path', async () => {
       myAddress: accounts[0],
       counterpartyAddress: accounts[1],
       counterpartyUrl: 'bob',
-      myUrl: 'bob',
+      myUrl: 'alice',
       channelId: idOne,
       state: '0x11',
       challengePeriod: 1

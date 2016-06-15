@@ -11,9 +11,11 @@ export default function (globals) {
   function handlerFactory (method) {
     return function (req, res) {
       console.log('\n' + 'peer API:', method, req.body)
+      // use the request header to figure out the counterparty
+      req.body.counterpartyUrl = req.headers.host
       logic[method](req.body)
       .then(result => {
-        res.send(result)
+        res.json(result)
       })
       .catch(error => {
         console.log(error)
