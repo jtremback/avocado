@@ -12,7 +12,7 @@ export default function (globals) {
     return function (req, res) {
       console.log('\n' + 'peer API:', method, req.body)
       // use the request header to figure out the counterparty
-      req.body.counterpartyUrl = req.headers.host
+      req.body.counterpartyUrl = `http://${req.headers.host}`
       logic[method](req.body)
       .then(result => {
         res.json(result)
@@ -24,7 +24,9 @@ export default function (globals) {
     }
   }
 
+  app.post('/get_blockchain_channel', handlerFactory('getBlockchainChannel'))
   app.post('/add_proposed_channel', handlerFactory('addProposedChannel'))
+  app.post('/accept_proposed_channel', handlerFactory('acceptProposedChannel'))
   app.post('/add_proposed_update', handlerFactory('addProposedUpdate'))
   app.post('/add_accepted_update', handlerFactory('addAcceptedUpdate'))
 

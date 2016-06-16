@@ -45,14 +45,14 @@ export class Logic {
 
 
   // View one proposed channel
-  async viewProposedChannel (channelId) {
+  async viewProposedChannel ({ channelId }) {
     const proposedChannels = this.storage.getItem('proposedChannels')
     return proposedChannels[channelId]
   }
 
   // Get the channel from the blockchain, update the local,
   // and return it
-  async getBlockchainChannel (channelId) {
+  async getBlockchainChannel ({ channelId }) {
     Bytes32(channelId)
     const channel = await this.contract.getChannel.call(
       channelId
@@ -130,7 +130,7 @@ export class Logic {
 
 
   // Get a channel from the proposed channel list and accept it
-  async acceptProposedChannel (channelId) {
+  async acceptProposedChannel ({ channelId }) {
     const channel = this.storage.getItem('proposedChannels')[channelId]
 
     if (!channel) {
@@ -206,6 +206,9 @@ export class Logic {
     channel.myProposedUpdates.push(update)
     this.storeChannel(channel)
 
+    console.log('LOGIC.js PROPOSE UPDATE')
+    console.log(channel)
+
     checkSuccess(await this.post(channel.counterpartyUrl + '/add_proposed_update', update))
   }
 
@@ -257,7 +260,7 @@ export class Logic {
 
 
   // Accepts last update from theirProposedUpdates
-  async acceptLastUpdate (channelId) {
+  async acceptLastUpdate ({ channelId }) {
     const channel = this.storage.getItem('channels')[channelId]
     const lastUpdate = channel.theirProposedUpdates[
       channel.theirProposedUpdates.length - 1
@@ -293,7 +296,7 @@ export class Logic {
 
 
   // Post last accepted update to the blockchain
-  async postLastUpdate (channelId) {
+  async postLastUpdate ({ channelId }) {
     Bytes32(channelId)
 
     const channel = this.storage.getItem('channels')[channelId]
@@ -311,7 +314,7 @@ export class Logic {
 
 
   // Start the challenge period, putting channel closing into motion
-  async startChallengePeriod (channelId) {
+  async startChallengePeriod ({ channelId }) {
     Bytes32(channelId)
 
     const channel = this.storage.getItem('channels')[channelId]
@@ -333,7 +336,7 @@ export class Logic {
     )
   }
 
-  async tryClose (channelId) {
+  async tryClose ({ channelId }) {
     Bytes32(channelId)
 
     await this.contract.tryClose(channelId)

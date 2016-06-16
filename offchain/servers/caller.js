@@ -11,6 +11,14 @@ export default function (globals) {
   function handlerFactory (method) {
     return function (req, res) {
       console.log('\n' + 'caller API:', method, req.body)
+      // use the request header to figure out the counterparty
+      req.body.counterpartyUrl = `http://${req.headers.host}`
+      // the problem is that I'm figuring out who to post to from the
+      // body.counterpartyUrl, but I also want to use that on the counterparty
+      // server side to identify the sender?
+      //
+      // when I receive a request to my server, it has "counterpartyUrl" in the
+      // payload. I then POST to that url.
       logic[method](req.body)
       .then(result => {
         res.send(result)
@@ -21,7 +29,8 @@ export default function (globals) {
       })
     }
   }
-  app.post('/test_cli', handlerFactory('testCli'))
+
+  app.post('/get_blockchain_channel', handlerFactory('getBlockchainChannel'))
   app.post('/view_proposed_channels', handlerFactory('viewProposedChannels'))
   app.post('/accept_proposed_channel', handlerFactory('acceptProposedChannel'))
   app.post('/propose_channel', handlerFactory('proposeChannel'))

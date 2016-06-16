@@ -34,7 +34,8 @@ export default async () => {
       body.counterpartyUrl = myUrl
 
       try {
-        return await apis[who][calls['/' + method]](body)
+        let result = await apis[who][calls['/' + method]](body)
+        return { body: result }
       } catch (error) {
         console.log(error)
         return { error: error.message }
