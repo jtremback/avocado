@@ -1,10 +1,4 @@
 # Avocado
-
-Run `npm start` to start a state channel server.
-Then give it commands with `npm run cli`.
-For example, you can try `npm run cli test_cli`.
-Run `npm run offchain_tests` to test the integration of contract and offchain code.
-
 This is a project demonstrating a generalized, low-level state channel.
 
 *What is a state channel?* A state channel is a way for two or more parties to maintain a state (any sequence of bytes) between them, being able to keep it updated without having to trust each other. This state can then be committed to the blockchain, at which point actions may be taken on it, such as releasing tokens from escrow. Participants in the channel exchanged signed state update transactions, and can close the channel at any time with confidence that the last valid update transaction will be honored. Because only the last update transaction is sent to the blockchain, they can be used to create very scalable systems. [Here's](http://www.jeffcoleman.ca/state-channels/) an easy explanation of state channels.
@@ -19,3 +13,9 @@ It is up to the channel participants to set up another contract, the "executive 
 The Avocado judge contract is in `contracts/StateChannels.sol`. There is also offchain code, which allows the channel participants to send state updates to eachother over the network. This code is in `offchain`.
 
 The logic for the offchain code is in `offchain/logic.js`. Reading this file will tell you everything you need to know about how the offchain code works. Some functions in this file are meant to be called by user, or another application calling avocado. Others are meant to be called by the counterparty. In `offchain/servers`, there are two files, `peer.js`, and `caller.js`. `caller.js` serves up an http api which can be called by other applications controlled by the user of the channel. For instance, a visual interface or a higher level application, such as one implementing the offchain code to make updates to a payment channel. `peer.js` provides an api that the peers use to propose new channels, or updates to the state of an existing channel.
+
+## Usage:
+- Run `npm start` to start a state channel server.
+- Then give it commands with `npm run cli`.
+- For example, you can try `npm run cli test_cli`.
+- Run `npm run offchain_tests` to test the integration of contract and offchain code.
