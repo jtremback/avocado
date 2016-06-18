@@ -3,57 +3,17 @@
 Run `npm start` to start a state channel server. Then give it commands with `npm run cli` for example you can try, `npm run cli test_cli`
 Run `npm run offchain_tests` to test the integration of contract and offchain code.
 
-## Ethereum State Channels
+This is a project demonstrating a generalized, low-level state channel.
 
-The ethereum blockchain must do a few things with a state channel. 
+*What is a state channel?* A state channel is a way for two or more parties to maintain a state (any sequence of bytes) between them, being able to keep it updated without having to trust each other. This state can then be committed to the blockchain, at which point actions may be taken on it, such as releasing tokens from escrow. Participants in the channel exchanged signed state update transactions, and can close the channel at any time with confidence that the last valid update transaction will be honored. Because only the last update transaction is sent to the blockchain, they can be used to create very scalable systems. [Here's](http://www.jeffcoleman.ca/state-channels/) an easy explanation of state channels.
 
-1. Opening the channel. To open the channel, some state is changed on the blockchain (in a payment channel, this consists of putting some tokens in escrow). A channel oracle is set up to determine report on the state in the channel and whether administer the channel closing rules.
+*What are state channels used for?* The most well-known use of state channels is in payment channels, a technique which allows two parties to pay each other by adjusting the balance of an escrow contract. Payment channels can also be linked together, allowing payments to be securely transmitted across multiple untrusted parties. This is the technique used in the Bitcoin Lightning network, and Ethereum's Raiden.
 
-2. Closing the channel. When a state channel oracle receives a valid state update from one of the channel participants, it enters a challenge period during which another channel participant can submit a state update with a higher sequence number. After the challenge period ends, the valid state update with the highest sequence number is accepted as the final state. What constitutes a valid state update will be discussed below.  
+## Avocado structure
+Avocado consists of a "judge contract" on the blockchain, and some offchain code that channel participants use to sign state updates and send them to one another over the network. The judge contract functions as an oracle- meaning that it only reports what the last valid state of the channel is, without taking action on that state.
 
-3. Taking action on the channel. After the channel is closed, contracts on the blockchain call the oracle and learn that it is closed. They can then change some other state on the blockchain (in a payment channel, this consists of sending the tokens in escrow back to the participants according to the channel's last valid state).
+It is up to the channel participants to set up another contract, the "executive contract". This is outside of the scope of Avocado. For example, in a payment channel, the executive contract would hold funds in escrow, and release them upon seeing that the judge contract reporting the channel as closed, in accordance with the closing state of the judge contract (each participant's ending balance).
 
-The standardized part of the channel that we describe here is the channel oracle responsible for step 2. The contract using the state channel oracle is responsible for steps 1 and 3.
+The Avocado judge contract is in `contracts/StateChannels.sol`. There is also offchain code, which allows the channel participants to send state updates to eachother over the network. This code is in `offchain`.
 
-A state channel oracle is a channel that gives a result when called:
-
-```
-{
-    phase: 'open' | 'challenge' | 'closed'
-    closingBlock: <integer>
-    lastStateUpdate: {
-        state: <bytes>
-        sequence: <integer>
-    }
-}
-```
-
-A state channel oracle reports whether a channel is open, in the challenge period, or closed. If the channel is in the challenge period or closed, it also reports the block that the channel closes on, and the last valid state update.
-
-## State update validity
-During the `open` and `challenge` phases the state channel oracle accepts state updates. The state channel oracle may have several requirements to consider a submitted state update valid. The simplest requirements are:
-
-- State updates must be signed by both channel participants.
-- Each successive state update must have a higher `sequence` than the last.
-- State updates cannot be submitted after the channel is closed.
-
-However, there will always be state updates which are valid according to the oracle, but contain state which is not valid to the contract using the state channel. For example, a payment channel whose balance goes below zero.
-
-What happens if the last valid state as reported by the state channel oracle is invalid for an application-specific reason? Presumably, the application would simply need to roll back the state that existed before opening the channel (in a payment channel, the escrow amounts would be refunded in full). This may be a good solution. It's the responsibility of the channel participants to ensure that they do not accidently sign an invalid state update.
-
-## Added features
-These things are key to the functionality and security of state channels, but might not be built into the core of the standard. 
-
-### Hashlock
-A hashlocked state update includes a hash. With a hashlocked state update, all or some of the state in the update is not considered valid unless the channel also receives the preimage for a given hash. 
-
-We could ignore this use in our specification and allow this abstraction to remain in the channel state. The contract consulting the state channel oracle would determine whether a hashlock is valid, having also received the preimage from one of the participants.
-
-Another way to do this is with evidence: unsigned data stored by the state channel oracle. The contract consulting the state channel oracle would determine whether a hashlock is valid, after consulting the preimage from one of the participants.
-
-Hashlocks could also be built into the state channel specification. In this case, we'd want to allow the state channel oracle to call out to an external contract as part of evaluating a hashlock to allow the use of different hashing algorithms or other conditions such as signatures.
-
-### Expiration block
-State updates can include be given an expiration block after which they are no longer valid. If Alice receives such a state update, she can send her signature to Bob. In exchange Bob sends her a new update with the same state but a later expiration block. 
-
-Without this, Alice can refuse to submit the state update, forcing Bob to submit the previous state update to close the channel. This allows us to attach some penalty to submitting an old state update.
+The logic for the offchain code is in `offchain/logic.js`. Reading this file will tell you everything you need to know about how the offchain code works. Some functions in this file are meant to be called by user, or another application calling avocado. Others are meant to be called by the counterparty. In `offchain/servers`, there are two files, `peer.js`, and `caller.js`. `caller.js` serves up an http api which can be called by other applications controlled by the user of the channel. For instance, a visual interface or a higher level application, such as one implementing the offchain code to make updates to a payment channel. `peer.js` provides an api that the peers use to propose new channels, or updates to the state of an existing channel.
